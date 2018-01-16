@@ -1,0 +1,29 @@
+所有的枚举都有一个ordinal方法，它返回每个枚举常量在类型中的数字位置。
+先来看一个枚举，代表怪物的品质等级
+public enum EnumArmyLvlType {  
+  CMD0,   
+  en_armu_lvl_type_divine,           /* 1.神将 */  
+  en_armu_lvl_type_outstanding,     /* 2.卓越 */  
+  en_armu_lvl_type_elite,          /* 3.精英 */  
+  
+  CMD4, CMD5,  
+  en_armu_lvl_type_normal         /* 6.普通 */  
+}  
+有时候我们需要把数据传递出去，比如，从Android客户端发送数据给C++服务端，我们不可能把枚举变量直接传出去，一做法会传对应的序号数字
+int iArmyLvlType = EnumArmyLvlType.en_armu_lvl_type_outstanding.ordinal();  
+但是这样做之后很难维护，如果常量进行重新排序，或者再添加一个与已经用过的int值关联的枚举常量，很难维护且很容易造成错误
+解决的方法是：永远不要根据枚举的序数导出与它关联的值，而是要将它保存在一个实例域中。
+public enum Ensemble {
+	SOLO(1), DUET(2), TRIO(3), QUARTET(4), QUINTET(5), SEXTET(6), SEPTET(7), OCTET(
+			8), DOUBLE_QUARTET(8), NONET(9), DECTET(10), TRIPLE_QUARTET(12);
+
+	private final int numberOfMusicians;
+
+	Ensemble(int size) {
+		this.numberOfMusicians = size;
+	}
+
+	public int numberOfMusicians() {
+		return numberOfMusicians;
+	}
+}

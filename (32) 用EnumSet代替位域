@@ -1,0 +1,40 @@
+什么是位域？
+位域是指信息在存储时，并不需要占用一个完整的字节，而只需占几个或一个二进制位。
+例如在存放一个开关量时，只有0和1 两种状态， 用一位二进位即可。
+为了节省存储空间，并使处理简便，C语言又提供了一种数据结构，称为“位域”或“位段”。
+所谓“位域”是把一个字节中的二进位划分为几 个不同的区域，并说明每个区域的位数。
+每个域有一个域名，允许在程序中按域名进行操作。这样就可以把几个不同的对象用一个字节的二进制位域来表示。
+
+下面用EnumSet将2的不同倍数赋值给每个常量
+//WRONG
+public class Text{
+    private static final int STYLE_BOLD = 1 << 0;
+    private static final int STYLE_ITALIC = 1 << 1;
+    private static final int STYLE_UNDERLIN = 1 << 2;
+
+    public void applyStyles(int styles) {...}
+}
+//use
+text.applyStyles(STYLE_BOLD | STYLE_ITALIC);
+
+Java中,当你需要传递多组常量集时,要使用EnumSet类代替位域.因为当位域一数字形式打印时,翻译位域要比翻译int枚举常量要困难得多,当你要遍历位域表示的所有元素时
+也会变得很困难.而EnumSet可以有效的表示从单个枚举类型中提取的多个值的多个集合.这个类实现Set接口,提供了丰富的功能和类型安全性,
+以及可以从任何其他Set实现中得到的互用性. 
+// RIGHT
+public class Text {
+	public enum Style {
+		BOLD, ITALIC, UNDERLINE, STRIKETHROUGH
+	}
+
+	// Any Set could be passed in, but EnumSet is clearly best
+	public void applyStyles(Set<Style> styles) {
+		// Body goes here
+	}
+
+	// Sample use
+	public static void main(String[] args) {
+		Text text = new Text();
+		text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
+	}
+}
+EnumSet缺点：无法创建不可变的EnumSet

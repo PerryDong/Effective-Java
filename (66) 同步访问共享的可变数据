@@ -1,0 +1,100 @@
+关键字synchronized可以保证同一时刻，只有一个线程可以执行某一个方法，或者某一个代码块。 
+同步的含义：
+  1）当一个对象被一个线程修改的时候，可以阻止另一个线程观察到对象内部不一致的状态； 
+  2）同步不仅可以组织一个线程看到对象处于不一致的状态，还可以保证进入同步方法或者同步代码块的每个线程，都看到由同一个锁保护的之前所有的修改效果。
+  
+考虑下面这个阻止一个线程妨碍另一个线程的任务。java的类库中提供了Thread.stop方法，但是这个方法是不安全的，会导致数据遭到破坏，建议使用线程轮询(poll)
+一个boolean域，另一个线程设置这个boolean域
+public class StopThread {
+    private static boolean stopRequested;
+    public static void main(String[] args) throws InterruptedException{
+	Thread backgroundThread=new Thread(new Runnable(){
+
+		@Override
+		public void run() {
+			int i=0;
+			while(!stopRequested){
+				i++;
+			}
+		}
+	});
+	backgroundThread.start();
+	TimeUnit.SECONDS.sleep(1);
+	StopRequested =true;
+    }
+}
+以上这个程序会永远执行下去，因为没有同步，无法保证后台进程可以看到stopRequested值得改变，虚拟机将代码：
+while(!stopRequested){
+    i++;
+}
+转变成了：
+if(!stopRequested){
+    while(true){
+        i++;
+    }
+}
+结果是个活性失败：（liveness failure）:这个程序无法前进。修正这个问题的一种方式是同步访问stopRequested域。
+public class StopThread {
+	private static boolean stopRequested;
+
+	private static synchronized void requestStop() {
+		stopRequested = true;
+	}
+
+	private static synchronized boolean stopRequested() {
+		return stopRequested;
+	}
+
+	public static void main(String[] args) throws InterruptedException {
+		Thread backgroundThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				int i = 0;
+				while (!stopRequested())
+					i++;
+			}
+		});
+		backgroundThread.start();
+
+		TimeUnit.SECONDS.sleep(1);
+		requestStop();
+	}
+}
+这种方法的同步只是为了它的通信效果，而不是为了互斥访问。另一个替代的方法是将stopRequested声明为volatile。volatile不支持互斥访问，但它可以保证任何一
+个线程在读取该域的时候都将看到最近刚刚被写入的值。
+public class StopThread {
+	private static volatile boolean stopRequested;
+
+	public static void main(String[] args) throws InterruptedException {
+		Thread backgroundThread = new Thread(new Runnable() {
+			@Override
+     			public void run() {
+				int i = 0;
+				while (!stopRequested)
+					i++;
+			}
+		});
+		backgroundThread.start();
+
+		TimeUnit.SECONDS.sleep(1);
+		stopRequested = true;
+	}
+}
+在使用volatile的时候务必要小心。
+private static volatile int nextSerialNumber = 0;
+private static int generateSerialNumber() {
+    return nextSerialNumber++;
+}
+这个方法的状态只包含一个可原子访问的域，这个域的所有可能的值都是合法的。因此不需要任何同步来保护它的约束条件。然而如果没有同步，这个方法仍然无法正常
+工作。问题在于增量操作符不是原子的。它在nextSerialNumber执行两个操作：首先读取它的值，然后写回一个新值。如果第二个线程在第一个线程读取旧值和写回新值
+期间读取这个域，第二个线程和第一个线程会看到同一个值，并返回相同的序列号。这就是安全性失败（safety failure）：这个程序计算出错误的结果。
+
+要么共享不可变的数据，要么压根不共享。将可变数据限制在单个线程中。采用这一策略，对它建立文档就很重要，以便它可以随着程序的发展而得到维护。
+让一个线程在短时间内修改一个数据对象，然后与其他线程共享，这是可以接受的，只同步共享对象引用的动作。然后其他线程没有进一步的同步也可以读取对象，只要
+它没有再被修改。这种对象被称为事实上不可变的。将这种对象的引用从一个线程传递到其他的线程被称为安全发布。
+安全发布对象引用的方法：将它保存在静态域中，作为类初始化的一部分；将它保存在volatile域、final域或通过正常锁定访问的域中；将它放到并发的集合中。
+
+规则：
+当多个线程共享可变数据的时候，每个读或写数据的线程都必须执行同步。如果没有同步，就无法保证一个线程所做的修改可以被另一个线程获知。
+未能同步共享可变数据会造成程序的活性失败和安全性失败。
+如果只需要线程之间的交互通信，而不需要互斥，volatile修饰符是一种可以接受的同步形式。

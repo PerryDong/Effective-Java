@@ -1,0 +1,54 @@
+重载是静态的，编译时根据调用的参数决定使用重载函数的哪个版本；覆盖是动态的，运行时根据实例的实际类型决定使用哪个版本。
+public class CollectionClassifier {
+	public static String classify(Set<?> s) {
+		return "Set";
+	}
+
+	public static String classify(List<?> lst) {
+		return "List";
+	}
+
+	public static String classify(Collection<?> c) {
+		return "Unknown Collection";
+	}
+
+	public static void main(String[] args) {
+		Collection<?>[] collections = { new HashSet<String>(),
+				new ArrayList<BigInteger>(),
+				new HashMap<String, String>().values() };
+
+		for (Collection<?> c : collections)
+			System.out.println(classify(c));
+	}
+}
+会输出三次 "Unknown Collection"。因为集合参数的编译时类型为Collection<?>，所以调用的重载方法是第三个。
+public class SetList {
+	public static void main(String[] args) {
+		Set<Integer> set = new TreeSet<Integer>();
+		List<Integer> list = new ArrayList<Integer>();
+
+		for (int i = -3; i < 3; i++) {
+			set.add(i);
+			list.add(i);
+		}
+
+		for (int i = 0; i < 3; i++) {
+			set.remove(i);
+			list.remove(i);
+		}
+
+		System.out.println(set + " " + list);
+	}
+}
+打印出[-3, -2, -1] [-2, 0, 2]。list.remove(i)调用选择重载方法remove(int i)，它从列表的指定位置上去除元素。修改方法为：
+list.remove((Integer) i);
+
+慎用重载更加准确的说，应该避免的重载是指：参数个数相同，且不同版本的形参之间通过类型转换就可以适用不同的版本，
+这样就使得程序员不是很容易就确定到底调用哪个版本，从而可能导致错误。
+
+如果需要重载，最好：
+  1）使不同版本具有不同的形参个数
+  2）如果具有相同的形参个数，那么不同版本的形参是“根本不同的类型”，让人一看就知道调用哪个，比如int和List<int>，而不是int与Integer，
+    因为他们二者会自动拆装箱
+  3）如果还不行，那么应该尽量保证不同版本的重载函数对于相同的形参，所产生的行为一致
+  4）考虑不使用重载，而使用不同的命名，比如ObjectOutputStream有writeBoolean、writeLong、writeInt这些方法，也是一种很好的策略

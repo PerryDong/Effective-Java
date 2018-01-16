@@ -1,0 +1,71 @@
+1）使用Javadoc进行注释，包括所有导出的类、接口、构造器、方法或域
+2）对于方法，简洁的描述它和客户端之间的约定，说明这个方法做了什么，而不是如何完全的，以前所有的前提条件、后置条件、副作用以及线程安全性
+
+文档注释方式：
+  1.文档注释必须以/**开头，否则Javadoc无法识别。
+  2.文档注释第一句话作为概要描述。概要描述必须独立地描述目标元素的功能，同一个类或接口中的任意两个成员或构造器，不应该具有相同的概要描述。
+  即使是重载方法也不行。
+  3.每个参数都应该有一个@param标签，标签后面第一个单词为参数名称，接着是对该参数的解释和要求。
+  4.返回类型非void的方法都应该有一个@return标签，描述返回值所表示的内容。
+  5.该方法可能抛出的每一个异常，无论是受检异常还是非受检异常，都要对应一个@throws标签。标签后面第一个单词为异常类型，接着是一句话，应该以if开头，
+  描述该异常将在什么情况下被抛出。@param、@return和@throws都不以句点结束。
+  6.@code标签可用于任何需要展示代码的地方，被该标签包围的内容会以特殊的字体显示，并且不对其中内容做任何HTML解析。
+  7.按惯例，单词“this”用在实例方法的文档注释中时，应该始终是指方法调用所在的对象。
+  8.可以用@literal标签展示包含HTML元字符的句子。它除了不改变显示样式外，其余效果和@code一样。
+  
+/** 
+ * Returns the element at the specified position in this list. 
+ * 
+ * <p>This method is <i>not</i> guaranteed to run in constant 
+ * time. In some implementations it may run in time proportional 
+ * to the element position. 
+ * 
+ * @param index index of element to return; must be 
+ *        non-negative and less than the size of this list 
+ * @return the element at the specified position in this list 
+ * @throws IndexOutOfBoundsException if the index is out of range 
+ *         ({@code index < 0 || index >= this.size()}) 
+ */  
+ E get(int index);
+ 
+ Java 1.5发行版本中增加的三个特性在文档注释中需要特别小心：泛型、枚举和注解。当为泛型或者方法编写文档时，确保要在文档中说明所有的类型参数。
+/**
+ * @param <K> the type of keys maintained by the map
+ * @param <V> the type of mapped values
+ */
+public interface Map<K, V> {
+    //dosomething
+}
+
+当为枚举类型编写文档时，要确保在文档中说明常量，以及类型，还有任何公有的方法。
+/**
+ * three primary colours
+ * return enum
+ */
+public enum Color {
+    /** Red, the color of blood. */
+    RED,
+    /** Green, the color of grass.  */
+    GREEN,
+    /** Blue, the color of sea. */
+    BLUE;
+}
+
+为注解类型编写文档时，要确保在文档中说明所有成员，以及本身类型。对于该类型的概要描述，要使用一个动词短语，
+说明当程序元素具有这种类型的注解时它表示什么意思。
+import java.lang.annotation.ElementType;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Indicates that the annotated method is a test method that
+ * must throw the designated exception to succeed.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+    /**The exception that the annotated test method must throw
+     * in order to pass. (The test is permitted to throw any
+     * subtype of the type described by this class object.) */
+    Class<? extends Exception> value();
+}

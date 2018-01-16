@@ -1,0 +1,12 @@
+专家级程序员与缺乏经验的程序员的一个最主要的区别在于，专家追求并且通常也能够实现高度的代码重用。代码重用是值得提倡的。这是一条通用的规则，异常也不例外。
+Java平台类库提供了一组基本的未受检的异常，它们满足了绝大多数API的异常抛出需要。
+
+经常被重用的异常有：
+IllegalArgumentException          非null的参数值不正确
+IllegalStateException             对于方法调用而言，对象状态不合适
+NullPointerException              在参数值不能为null的情况下参数值为null  
+IndexOutOfBoundsException         下标参数值越界  
+ConcurrentModificationException   在禁止并发修改的情况下，检测到对象的并发修改
+UnsupportedOperationException     对象不支持用户请求的方法
+
+选择重用哪个异常并不总是那么的精确，因为上面的异常的使用场合并不是相互排斥的。

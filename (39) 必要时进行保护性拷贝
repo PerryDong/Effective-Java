@@ -1,0 +1,52 @@
+如果类具有从客户端得到或者返回到客户端的可变组件，类就必须保护性的拷贝这些组件。
+除非拷贝成本收到限制，且类信任他的客户端不会不恰当的修改组件，就可以在文档中指明客户端的不得不恰当的修改组件，以代替保护性拷贝。
+
+例如，考虑下面的类，它声明可以表示一段不可变的时间周期：
+public final class Period {
+	private final Date start;
+	private final Date end;
+  	public Period(Date start, Date end) {
+		if (start.compareTo(end) > 0)
+			throw new IllegalArgumentException(start + " after " + end);
+		this.start = start;
+		this.end = end;
+  	}
+  	public Date start() {
+		return start;
+	}
+
+	public Date end() {
+		return end;
+	}
+}
+因为Date类本身是可变的，因此很容易违反这个约束条件：
+Date start = new Date();
+Date end = new Date();
+Period p = new Period(start, end);
+end.setYear(78); // Modifies internals of p!
+
+1）从客户端获取的可变组件也应该保护性拷贝，尤其在给构造函数传参时。
+保护性拷贝是在检查参数的有效性之前进行的，并且有效性检查是针对拷贝之后的对象，而不是原始对象，这样可以避免检查到真正拷贝期间，数据被其他线程更改。
+2）对于从客户端获取的可变组件，如若其是可以被子类化的，那么就不能使用clone函数进行拷贝，因为可能传进来的是个子类对象，而clone函数可以被子类重写，
+从而引发安全问题。传出去的可以使用clone，因为在类的内部可以确定它是非子类的
+3）真正应该注意的是：只要有可能，都应该使用不可变对象作为内部组件，以避免保护性拷贝。
+比如，使用Date.getTime()得到的long对象作为内部的时间组件，而不是Date，因为Date可变，而long不可变。
+
+构造器修改：
+public Period(Date start, Date end) {
+	   this.start = new Date(start.getTime());
+	   this.end = new Date(end.getTime());
+	
+	   if (this.start.compareTo(this.end) > 0)
+	   throw new IllegalArgumentException(start +" after "+ end);
+}
+
+访问方法修改：
+public Date start() {
+	   return new Date(start.getTime());
+}
+
+public Date end() {
+	   return new Date(end.getTime());
+}
+

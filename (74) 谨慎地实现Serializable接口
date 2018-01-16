@@ -1,0 +1,103 @@
+序列化：
+  序列化用来将对象编码成字节流，反序列化就使将字节流编码重新构建对象。 
+  序列化实现了对象传输和对象持久化，所以它能够为远程通信提供对象表示法，为JavaBean组件提供持久化数据。
+序列化的代价：
+  1）为实现Serializable而付出的最大代价是，一旦一个类被发布，就大大降低了”改变这个类的实现”的灵活性。如果一个类实现了Serializable，它的字节流编码
+  （或者说序列化形式，serialized form）就变成了它的导出的API的一部分，必须永远支持这种序列化形式。而且，特殊地，每个可序列化类都有唯一的标志
+  （serial version id，在类体现为私有静态final的long域serialVersionUID），如果没有显式指示，那么系统就会自动生成一个serialVersionUID，如果下一个
+  版本改变了这个类，那么系统就会重新自动生成一个serialVersionUID。因此如果没有声明显式的uid，会破坏版本之间的兼容性，
+  运行时产InvalidClassException。
+  2）它增加了Bug和安全漏洞的可能性。序列化机制是一种语言之外的对象创建机制，所以反序列化是一个“隐藏的构造器”，具体与其他构造器相同的特点，所以反序列
+  化过程也必须保证有构造器建立起来的约束关系，并且不允许攻击者在访问构造器过程中的内部对象，所以默认的反序列化机制很容易是对象约束遭到破坏，以及遭受
+  非法 的访问。
+  3）随着类发行新的版本，相关测试的负担也增加了。新的版本发布之后，要检查是否可以“在新版本中序列化一个实例，然后在旧版本中依然可以反序列化”，
+  这个测试除了二进制兼容性以外，还要测试语义兼容性。
+
+序列化类注意事项：
+  1）如果一个了类将要加入某个框架中，并且该框架依赖于序列化来实现对象传输或者持久化，那么实现Serializable这个接口就是非常有必要的。
+  2）还有为了继承而设计的类尽量少的去实现Serializable接口，用户的接口也应该尽可能少得继承Serializable接口，不然会对实现这些接口或者类的程序员增加
+  很多负担
+  3）实现一个带有可序列化实例的类时，应该要注意类的约束条件，并且要实现
+  private void readObjectNoData() throws InvalidObjectException{
+	  throw new InvalidObjectException("stream data is required");
+  }
+  4）对于为继承而设计的不可序列化的类，你应该考虑提供一个无参构造器
+  public abstract class AbstractFoo {
+    private int x, y; // Our state
+
+    // This enum and field are used to track initialization
+    private enum State {
+      NEW, INITIALIZING, INITIALIZED
+    };
+
+    private final AtomicReference<State> init = new AtomicReference<State>(
+        State.NEW);
+
+    public AbstractFoo(int x, int y) {
+      initialize(x, y);
+    }
+
+    // This constructor and the following method allow
+    // subclass's readObject method to initialize our state.
+    protected AbstractFoo() {
+    }
+
+    protected final void initialize(int x, int y) {
+      if (!init.compareAndSet(State.NEW, State.INITIALIZING))
+        throw new IllegalStateException("Already initialized");
+      this.x = x;
+      this.y = y;
+      // Do anything else the original constructor did
+      init.set(State.INITIALIZED);
+    }
+
+    // These methods provide access to internal state so it can
+    // be manually serialized by subclass's writeObject method.
+    protected final int getX() {
+      checkInit();
+      return x;
+    }
+
+    protected final int getY() {
+      checkInit();
+      return y;
+    }
+
+    // Must call from all public and protected instance methods
+    private void checkInit() {
+      if (init.get() != State.INITIALIZED)
+        throw new IllegalStateException("Uninitialized");
+    }
+    // Remainder omitted
+  }
+注意init域是一个原子引用(atomic reference)。在遇到特定的情况时，确保对象的完整性很有必要。这种模式利用compareAndSet方法来操作枚举的原子引用
+这是一个很好的线程安全状态机(thread-safe state machine)的通用实现。
+如果有了这样的机制做保证，实现一个可序列化的子类就非常简单明了：
+  public class Foo extends AbstractFoo implements Serializable {
+    private void readObject(ObjectInputStream s) throws IOException,
+        ClassNotFoundException {
+      s.defaultReadObject();
+
+      // Manually deserialize and initialize superclass state
+      int x = s.readInt();
+      int y = s.readInt();
+      initialize(x, y);
+    }
+
+    private void writeObject(ObjectOutputStream s) throws IOException {
+      s.defaultWriteObject();
+
+      // Manually serialize superclass state
+      s.writeInt(getX());
+      s.writeInt(getY());
+    }
+
+    // Constructor does not use the fancy mechanism
+    public Foo(int x, int y) {
+      super(x, y);
+    }
+
+    private static final long serialVersionUID = 1856835860954L;
+  }
+  
+  内部类不应该实现Serializable。静态成员类却可以实现Serializable接口。 

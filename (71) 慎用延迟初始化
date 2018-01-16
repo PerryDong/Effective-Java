@@ -1,0 +1,50 @@
+大多数的域应该正常地进行初始化，而不是延迟初始化。如果为了达到性能目标，或者为了破坏有害的初始化循环，而必须延迟初始化一个域，就可以使用相应的延迟初始
+化方法。
+
+  private static FieldType computeFieldValue() {
+	return new FieldType();
+  }
+  
+  正常初始化：private final FieldType field1 = computeFieldValue();
+  延迟初始化：
+  private FieldType field;
+  synchronized FieldType getField() {
+	  if (field == null)
+	  	  field = computeFieldValue();
+	  return field;
+  }
+  
+  延迟化初始化方式：
+  1）对于实例域，使用双重检查模式(double-check idiom)
+  private volatile FieldType field;
+
+  FieldType getField() {
+	FieldType result = field;
+	if (result == null) { // First check (no locking)
+		synchronized (this) {
+			result = field;
+			if (result == null) // Second check (with locking)
+				field = result = computeFieldValue();
+		}
+	}
+	return result;
+  }
+  
+  2）对于静态域，使用 lazy initialization holder class 模式
+  private static class FieldHolder {
+	static final FieldType field = computeFieldValue();
+  }
+
+  static FieldType getField() {
+	return FieldHolder.field;
+  }
+  
+  3）对于可以接受重复初始化的实例域，可以考虑使用单重检查模式(single-check idiom)
+  private volatile FieldType field;
+
+  private FieldType getField() {
+	FieldType result = field;
+	if (result == null)
+		field = result = computeFieldValue();
+	return result;
+  }

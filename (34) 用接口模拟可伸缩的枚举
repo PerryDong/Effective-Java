@@ -1,0 +1,91 @@
+由于在java中enum不是可扩展的，在某些情况下，可能需要对枚举进行扩展，比如操作类型(+-*/等)，就可以考虑：
+
+1、定义一个接口，比如public interface Operation{...}；
+2、使枚举继承接口：比如public enum BasicOperation implements Operation{...}
+3、使用时的API写成接口(比如，T extends Enum<T> & Operation)，而不是实现（比如BasicOperation ）
+   private static <T extends Enum<T> & Operation> void function(T t,..); //表示T即表示枚举又是Operation的子类型
+
+示例：
+
+public interface Operation {
+	double apply(double x, double y);
+}
+
+public enum BasicOperation implements Operation {
+	PLUS("+") {
+		public double apply(double x, double y) {
+			return x + y;
+		}
+	},
+	MINUS("-") {
+		public double apply(double x, double y) {
+			return x - y;
+		}
+	},
+	TIMES("*") {
+		public double apply(double x, double y) {
+			return x * y;
+		}
+	},
+	DIVIDE("/") {
+		public double apply(double x, double y) {
+			return x / y;
+		}
+	};
+	private final String symbol;
+
+	BasicOperation(String symbol) {
+		this.symbol = symbol;
+	}
+
+	@Override
+	public String toString() {
+		return symbol;
+	}
+}
+
+public enum ExtendedOperation implements Operation {
+	EXP("^") {
+		public double apply(double x, double y) {
+			return Math.pow(x, y);
+		}
+	},
+	REMAINDER("%") {
+		public double apply(double x, double y) {
+			return x % y;
+		}
+	};
+
+	private final String symbol;
+
+	ExtendedOperation(String symbol) {
+		this.symbol = symbol;
+	}
+
+	@Override
+	public String toString() {
+		return symbol;
+	}
+
+	// Test class to exercise all operations in "extension enum" - Page 167
+	public static void main(String[] args) {
+		double x = Double.parseDouble(args[0]);
+		double y = Double.parseDouble(args[1]);
+		test(ExtendedOperation.class, x, y);
+
+		System.out.println(); // Print a blank line between tests
+		test2(Arrays.asList(ExtendedOperation.values()), x, y);
+	}
+
+	// test parameter is a bounded type token (Item 29)
+	private static <T extends Enum<T> & Operation> void test(Class<T> opSet, double x, double y) {
+		for (Operation op : opSet.getEnumConstants())
+			System.out.printf("%f %s %f = %f%n", x, op, y, op.apply(x, y));
+	}
+
+	// test parameter is a bounded wildcard type (Item 28)
+	private static void test2(Collection<? extends Operation> opSet, double x, double y) {
+		for (Operation op : opSet)
+			System.out.printf("%f %s %f = %f%n", x, op, y, op.apply(x, y));
+	}
+}

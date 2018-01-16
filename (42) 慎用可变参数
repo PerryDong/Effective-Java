@@ -1,0 +1,47 @@
+可变参数可以接受0个或者多个指定类型的参数。可变参数机制通过先创建一个数组，数组的大小为在调用位置所传递的参数数量，然后将参数值传到数组中。
+static int sum(int... args) {
+    int sum=0;
+    for(int arg : args)
+        sum += arg;
+    return sum;
+}
+但是，不传参也是可以的，这样容易导致错误的出现，所以常见的策略是首先指定正常参数，把可选参数放在后面。
+static int min(int firstArg, int... remainingArgs) {
+
+    int min = firstArg;
+    for(int arg : remainingArgs)
+        if(arg < min)
+            min = arg;
+    return min;
+}
+
+在定义参数数目不定的方法时，可变参数是一种很方便的方式，但不应该被滥用，以免造成混乱。例如：
+jdk1.5以前：Array.asList是这样的
+public static  List< Object > asList(Object[] obj) {
+        return new ArrayList< Object >(obj);
+}
+我们想要打印对象引用数组一般这样用Arrays.asList(),因为直接调用数组的toString()会产生没有意义的结果，如下：
+String[] strings = {"12","23","34","56"};
+System.out.println(Arrays.asList(strings));//[12, 23, 34, 56]
+System.out.println(strings.toString());//[Ljava.lang.String;@3d4eac69
+所以当：
+int[] ints = {12,23,34,56};
+System.out.println(Arrays.asList(ints));//会发生编译错误Object[] can’t apply to int[]
+jdk1.5以后，Arrays.asList变成了可变参数
+public static <T> List<T> asList(T... a) {
+        return new ArrayList<>(a);
+}
+这样也就相当于允许了Array.asList(基本参数类型数组) 
+产生下面的结果
+int[] ints = {12,23,34,56};
+System.out.println(Arrays.asList(ints));//[[I@42a57993]
+System.out.println(ints.toString());//[I@42a57993
+这是由于List<Integer>参数类型是引用类型，而ints为基本类型。Arrays.asList将int[] 作为单个元素将其包装到List<int[]>实例中。
+
+当重视性能，认为可变参数的每次调用进行的数组分配和初始化可能难以满足性能要求时，可以考虑如下方式：如果对某个方法95%的调用会有三个或者更少的参数，
+就声明该方法的5个重载：
+1 public void fun() {}
+2 public void fun(int a1) {}
+3 public void fun(int a1, int a2) {}
+4 public void fun(int a1, int a2, int a3) {}
+5 public void fun(int a1, int a2, int a3, int... rest) {}

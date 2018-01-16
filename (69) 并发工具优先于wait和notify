@@ -1,0 +1,63 @@
+自jdk1.5以后java提供了更为高级的并发工具，他们可以完成wait和notify所能完成的各项工作。
+java.util.concurrent中更高级的工具分成三类：Executor Framework、并发集合(Concurrent Collection)以及同步器(Synchronizer)
+  Executor Framework是线程池的调度，即调用线程池的静态方法：ExecutorService executor = Executor.newSingleThreadExcecutor();
+  并发集合，既是在concurrent包中增加的一些并发的集合，例如：ConcurrentMap,其扩展了Map接口，并添加了一些方法;
+  同步器是使一些线程能够等待另一个线程的对象，允许它们协调动作。最常用的同步器是CountDownLatch和Semapore
+
+示例：构建一个简单的框架，用来给一个动作的并发执行定时。这个框架中包含单个方法，这个方法带有一个执行该动作的executor,一个并发级别（表示要并发执行
+该动作的次数），以及表示该动作的runnable。
+所有的工作线程要在timer线程启动时钟之前运行该动作。当最后一个工作线程准备好运行该动作时,timer线程开始。当最后一个工作线程执行完毕，timer线程停止计时
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+
+public class ConcurrentTimer {
+	private ConcurrentTimer() {
+	} // Noninstantiable
+
+	public static long time(Executor executor, int concurrency,
+			final Runnable action) throws InterruptedException {
+		final CountDownLatch ready = new CountDownLatch(concurrency);
+		final CountDownLatch start = new CountDownLatch(1);
+		final CountDownLatch done = new CountDownLatch(concurrency);
+
+		for (int i = 0; i < concurrency; i++) {
+			executor.execute(new Runnable() {
+				public void run() {
+					ready.countDown(); // Tell timer we're ready
+					try {
+						start.await(); // Wait till peers are ready
+						action.run();
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					} finally {
+						done.countDown(); // Tell timer we're done
+					}
+				}
+			});
+		}
+
+		ready.await(); // Wait for all workers to be ready
+		long startNanos = System.nanoTime();
+		start.countDown(); // And they're off!
+		done.await(); // Wait for all workers to finish
+		return System.nanoTime() - startNanos;
+	}
+}
+注意细节：传递给time方法的executor必须允许创建至少与指定并发级别一样多的线程，否则这个测试就永远不会结束。这就是线程饥饿死锁(thread starvation 
+deadlock)
+
+虽然你始终应该优先使用并发工具，而不是wait和notify，但可能会维护使用wait和notify的遗留的代码。wait方法被用来使线程等待某个条件。它必须在同步区域
+内被调用。下面是使用wait方法的标准模式：
+Synchronized(obj){
+    while(条件不成立)
+        obj.wait();
+}
+始终应该使用wait循环模式来调用wait方法；永远不要在循环之外调用wait方法。循环会在等待之前和之后测试条件。
+为了唤醒正在等待的线程，你应该使用notify还是notifyAll。一种常见的说法是，你总是应该使用notifyAll。这是合理而保守的建议。它总会产生正确的结果，
+因为它可能保证你将会唤醒所有需要唤醒的线程。你可能会唤醒其他一些线程，但是这不会影响程序的正确性，这些线程醒来之后，会检查他们正在等待的条件，
+如果发现条件并不满足，就会继续等待。从优化的角度来看，如果处于等待状态的所有现场都在等待同一个条件，而每次只有一个线程可以从这个条件中被唤醒，
+那么你就应该选择调用notify，而不是notifyAll。
+
+规则：
+没有理由在新代码中使用wait和notify，即使有，也是极少的。如果你在维护使用wait和notify的代码，务必确保始终是利用标准的模式从while循环内部调用wait。
+一般情况下，应当优先使用notifyAll，而不是notify。

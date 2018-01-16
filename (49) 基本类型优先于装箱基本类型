@@ -1,0 +1,26 @@
+基本类型与装箱基本类型的区别：
+  1）基本类型只有值，而装箱基本类型则具有与它们的值不同的同一性，即两个装箱基本类型可以有相同的值和不同的同一性（因为它们是不同的实例）
+  2）装箱基本类型还可以为null值
+  3）基本类型通常比装箱基本类型更加节省时间和空间
+  
+注意：
+  1）使用“==”比较两个装箱基本类型，不仅比较它们的值，还比较它们的同一性
+  Comparator<Integer> naturalOrder = new Comparator<Integer>() {
+			public int compare(Integer first, Integer second) {
+				return first < second ? -1 : (first == second ? 0 : 1);
+			}
+	};
+  int result = naturalOrder.compare(new Integer(42), new Integer(42));
+	System.out.println(result);
+  输出1。 <不成立，==比较同一性不成立，返回1
+  
+  2）如果在一项操作中混合使用基本类型和装箱基本类型时，装箱基本类型会自动拆箱
+  3）如果null对象被自动拆箱，则会产生NullPointException异常
+  public class Unbelievable {
+    static Integer i;
+
+    public static void main(String[] args) {
+      if (i == 42)
+        System.out.println("Unbelievable");
+    }
+  }

@@ -1,0 +1,81 @@
+使用ordinal方法来索引数组的代码。例如下面的类，用来表示一种烹饪用的香草：
+public class Herb{
+    public enum Type { ANNUAL, PERENNIAL, BIENNIAL }
+    private final String name;
+    private final Type type;
+
+    Plant(String name, Type type){
+        this.name = name;
+        this.type = type;
+    }
+    @Override public String toString() {
+        return name;
+    }
+}
+
+假设有一个香草的数组，表示一座花园中的植物，想要按照类型进行组织之后将这些植物列出来。
+Set<Herb>[] herbsByType = (Set<Herb>[]) new Set[Herb.Type.valuse().lenght]; 
+//根据香草的类型，分别把所有的植物放入三个set中
+for(int i = 0; i < herbsByType.lenght; i++){
+   herbsByType[i] = new HashSet<Herb>();
+}
+for(Herb h : garden){  //garden里放了所有的植物
+    herbsByType[h.type.ordinal()].add(h)  //反面教材：利用了枚举的序数来得到想要的数组索引，用户在其他地方可以不使用ordinal函数，
+    而直接使用int值来访问，就可能出错
+} 
+
+正确的做法是使用java.util.EnumMap,专门用于枚举键
+Herb[] garden = {new Herb("Basil", Type.ANNUAL),
+		new Herb("Carroway", Type.BIENNIAL),
+		new Herb("Dill", Type.ANNUAL),
+		new Herb("Lavendar", Type.PERENNIAL),
+		new Herb("Parsley", Type.BIENNIAL),
+		new Herb("Rosemary", Type.PERENNIAL) };
+
+// Using an EnumMap to associate data with an enum - Page 162
+Map<Herb.Type, Set<Herb>> herbsByType = new EnumMap<Herb.Type, Set<Herb>>(
+    Herb.Type.class);
+for (Herb.Type t : Herb.Type.values())
+  herbsByType.put(t, new HashSet<Herb>());
+for (Herb h : garden)
+  herbsByType.get(h.type).add(h);
+System.out.println(herbsByType);
+
+按照序数进行索引的数组的数组，该序数表示两个枚举值的映射。可以用map的键表示一个枚举，值为另一个map。
+public enum Phase {
+	SOLID, LIQUID, GAS;
+
+	public enum Transition {
+		MELT(SOLID, LIQUID), FREEZE(LIQUID, SOLID), BOIL(LIQUID, GAS), CONDENSE(
+				GAS, LIQUID), SUBLIME(SOLID, GAS), DEPOSIT(GAS, SOLID);
+
+		private final Phase src;
+		private final Phase dst;
+
+		Transition(Phase src, Phase dst) {
+			this.src = src;
+			this.dst = dst;
+		}
+
+		// Initialize the phase transition map
+		private static final Map<Phase, Map<Phase, Transition>> m = new EnumMap<Phase, Map<Phase, Transition>>(Phase.class);
+		static {
+			for (Phase p : Phase.values())
+				m.put(p, new EnumMap<Phase, Transition>(Phase.class));
+			for (Transition trans : Transition.values())
+				m.get(trans.src).put(trans.dst, trans);
+		}
+
+		public static Transition from(Phase src, Phase dst) {
+			return m.get(src).get(dst)
+		}
+	}
+
+	// Simple demo program - prints a sloppy table
+	public static void main(String[] args) {
+		for (Phase src : Phase.values())
+			for (Phase dst : Phase.values())
+				if (src != dst)
+					System.out.printf("%s to %s : %s %n", src, dst, Transition.from(src, dst));
+	}
+}

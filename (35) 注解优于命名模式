@@ -1,0 +1,41 @@
+java 1.5版本之前，一般使用命名模式表明有些程序元素需要通过某种工具或者框架进行特殊处理。例如，JUnit测试框架原本要求它的用户一定要使用test作为测试方法
+名称的开头。这种方式的几个缺点：
+1）文字拼写错误会导致失败，且没有任何提示。
+2）无法确保它们只用于相应的程序元素上。
+3）没有提供将参数值与程序元素关联起来的好方法。
+
+优先使用注解来表明针对某些程序元素的特定信息，例：
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+	Class<? extends Exception>[] value();
+}
+
+public class Sample2 {
+	@ExceptionTest(ArithmeticException.class)
+	public static void m1() { // Test should pass
+		int i = 0;
+		i = i / i;
+	}
+
+	@ExceptionTest(ArithmeticException.class)
+	public static void m2() { // Should fail (wrong exception)
+		int[] a = new int[0];
+		int i = a[1];
+	}
+
+	@ExceptionTest(ArithmeticException.class)
+	public static void m3() {
+	} // Should fail (no exception)
+
+	// Code containing an annotation with an array parameter - Page 174
+	@ExceptionTest({ IndexOutOfBoundsException.class, NullPointerException.class })
+	public static void doublyBad() {
+		List<String> list = new ArrayList<String>();
+
+		// The spec permits this method to throw either
+		// IndexOutOfBoundsException or NullPointerException
+		list.addAll(5, null);
+	}
+}

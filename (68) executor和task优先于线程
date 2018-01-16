@@ -1,0 +1,20 @@
+在java1.5，java平台中增加了java.util.concurrent，这个包中包含了一个Executor Framework,这是一个很灵活的基于接口的任务执行工具它创建了一个
+在各方面都很好的队列，只需要一行这样的代码：
+ExecutorService executor = Executors.newSingleThreadExecutor();
+下面是为执行提交一runnable的方法：
+executor.execute(runnable);
+下面是如何优雅的终止：
+executor .shutdown();
+
+如果想让不止一个线程来处理来自这个队列的请求，只要调用一个不同的静态工厂，这个工厂创建了一种不同的executor service，称作线程池。
+你可以用固定或者可变的数目的线程来创建一个线程池。
+为特殊的应用程序选择executor service是很有技巧的，如果是编写小的程序，或者是轻栽的服务器，使用Executors.newCachedThreadPool通常是个不同的选择，
+因为它不需要配置，并且一般情况下能够正确的完成工作，但是对于大负载的服务器来说，缓存的线程池就不是很好的选择了，在缓存的线程池中，被提交的任务没有
+排成队列，而是直接交给线程执行，如果没有线程可以用，就创建一个新的线程。如果服务器负载的太重，以至于它的所有CPU都完全被占用了，当有更多的任务时，
+当有更多的任务时，就会创建更多的线程，这样只会使情况变的更糟，因此在大负载的产品服务中，最好使用Executors.newFixedThreadPool，
+它为你提供一个包含固定线程数目的线程池.要想最大限度的控制它，就直接使用ThreadPoolExecutor类。
+
+你不仅应该尽量不要编写自己的工作队列，即用上面的创建队列的方式。而且还应该尽量不直接使用线程。现在关键的抽象不是Thread了，他之前既充当工作单元又是
+执行机制（run()方法，start()方法），现在工作单元和执行机制是分开的。现在关键的抽象是工作单元，称作任务（task）.
+任务有两种：Runnable及其近亲Callable(有返回值)。执行任务的通用机制是ExecutorService 。如果你从任务的角度看问题，并让一个ExecutorService 
+替你执行任务，在选择适当的执行策略方面就获得了极大的灵活性。

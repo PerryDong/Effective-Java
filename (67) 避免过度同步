@@ -1,0 +1,231 @@
+辅助基础类：
+public class ForwardingSet<E> implements Set<E> {
+	private final Set<E> s;
+
+	public ForwardingSet(Set<E> s) {
+		this.s = s;
+	}
+
+	public void clear() {
+		s.clear();
+	}
+
+	public boolean contains(Object o) {
+		return s.contains(o);
+	}
+
+	public boolean isEmpty() {
+		return s.isEmpty();
+	}
+
+	public int size() {
+		return s.size();
+	}
+
+	public Iterator<E> iterator() {
+		return s.iterator();
+	}
+
+	public boolean add(E e) {
+		return s.add(e);
+	}
+
+	public boolean remove(Object o) {
+		return s.remove(o);
+	}
+
+	public boolean containsAll(Collection<?> c) {
+		return s.containsAll(c);
+	}
+
+	public boolean addAll(Collection<? extends E> c) {
+		return s.addAll(c);
+	}
+
+	public boolean removeAll(Collection<?> c) {
+		return s.removeAll(c);
+	}
+
+	public boolean retainAll(Collection<?> c) {
+		return s.retainAll(c);
+	}
+
+	public Object[] toArray() {
+		return s.toArray();
+	}
+
+	public <T> T[] toArray(T[] a) {
+		return s.toArray(a);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return s.equals(o);
+	}
+
+	@Override
+	public int hashCode() {
+		return s.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return s.toString();
+	}
+}
+
+使用一个类使这个类可以被观察者注册
+public class ObservableSet<E> extends ForwardingSet<E> {
+    public ObservableSet(Set<E> s) {
+        super(s);
+    }
+    
+    private final List<SetObserver<E>> observers = new ArrayList<SetObserver<E>>();
+    
+    public void addObserver(SetObserver<E> observer) {
+        synchronized (observers) {
+            observers.add(observer);
+        }
+    }
+
+    public boolean removeObserver(SetObserver<E> observer) {
+        synchronized (observers) {
+            return observers.remove(observer);
+        }
+    }
+
+    // This method is the culprit
+    private void notifyElementAdded(E element) {
+        synchronized (observers) {
+            for (SetObserver<E> observer : observers)
+                observer.added(this, element);
+        }
+    }
+    
+    @Override
+    public boolean add(E e) {
+        //调用父类函数添加到集合中
+        boolean added = super.add(e);
+        if(added) {
+            //添加成功,观察者保存注册对象
+            notifyElementAdded(e);
+        }
+        
+        return added;
+    }
+    
+    @Override
+    public boolean addAll(Collection<? extends E> c) {
+        boolean result = false;
+        for(E element : c) {
+            //做或运算，只要有一个add添加成功，那么result就是true
+            result |= add(element);
+        }
+        return result;
+    }
+}
+
+观察者：
+public interface SetObserver<E> {
+    /**
+     * 当一个元素添加到ObservableSet对象中的时候，调用
+     * @param set
+     * @param element
+     */
+    void added(ObservableSet<E> set, E element);
+}
+
+测试1
+public void test() {
+    //创建一个被观察的对象
+    ObservableSet<Integer> set = new ObservableSet<Integer>(new HashSet<Integer>());
+
+    //添加一个观察者
+    set.addObserver(new SetObserver<Integer>() {
+        public void added(ObservableSet<Integer> s, Integer e) {
+            System.out.println(e);
+        }
+    });
+
+    for (int i = 0; i < 100; i++)
+        set.add(i);
+}
+会正常打印出0~99
+
+测试2
+public void test2() {
+    ObservableSet<Integer> set = new ObservableSet<Integer>(new HashSet<Integer>());
+
+    set.addObserver(new SetObserver<Integer>() {
+        public void added(ObservableSet<Integer> s, Integer e) {
+            System.out.println(e);
+            if (e == 23) //到23，我们取消这个观察者，但是会爆出异常，因为在迭代遍历列表的时候我们自己修改了列表，这是非法的
+                s.removeObserver(this);
+        }
+    });
+
+    for (int i = 0; i < 100; i++)
+        set.add(i);
+}
+出现ConcurrentModificationException。问题在于，当notifyElementAdded调用观察者的added方法时，它正处于遍历Observers列表的过程中。added方法调用
+可观察集合的removeObserver方法，从而调用observers.remove。我们正企图在遍历链表的过程中，将一个元素从列表中删除，这是非法的。
+
+使用另一个线程删除观察者，测试3
+public void test3() {
+    ObservableSet<Integer> set = new ObservableSet<Integer>(new HashSet<Integer>());
+
+    set.addObserver(new SetObserver<Integer>() {
+        @Override
+        public void added(final ObservableSet<Integer> set, Integer element) {
+            System.out.println(element);
+            //如果是23
+            if(element == 23) {
+                //线程池，创建单个线程的线程池，如果当前线程在执行任务时突然中断，则会创建一个新的线程替代它继续执行任务
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                final SetObserver<Integer> observer = this;
+                try {
+                    executor.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            //这里会死锁
+                            set.removeObserver(observer);
+                        }
+                    }).get();
+                }catch (ExecutionException ex) {
+                  throw new AssertionError(ex.getCause());
+                }catch (InterruptedException ex) {
+                  throw new AssertionError(ex.getCause());
+                }finally {
+                  executor.shutdown();
+                }
+
+            }
+        }
+    });
+
+    for (int i = 0; i < 100; i++)
+        set.add(i);
+}
+
+在前面两个例子中。调用外来的方法(added）时，同步区域(observers)所保护的资源处于一致的状态。假设当同步区域所保护的约束条件暂时无效时，你要从同步
+区域中调用一个外来方法。由于Java的缩是可重入的，这种调用不会死锁。就像在第一个例子中一样，它会产生一个异常，因为调用线程已经有这个锁了，因此当
+线程试图再次获得该锁时会成功，尽管概念上不相关的另一项操作正在该锁所保护的数据上进行着。
+
+解决方法1：将外来方法的调用移出同步的代码块。
+private void notifyElementAdded(E element) {
+    List<SetObserver<E>> snapshot = null;
+    synchronized (observers) {
+        //这里拍一个快照,这样我们遍历的时候就不用对原来的集合进行上锁了
+        snapshot = new ArrayList<SetObserver<E>>(observers);
+    }
+    for (SetObserver<E> observer : snapshot)
+        observer.added(this, element);
+}
+
+解决方法2：Java类库提供的并发集合(concurrent collection)，称作CopyOnWriteArrayList。这是ArrayList的一种变体，通过重新拷贝整个底层数组，在这里
+实现所有的写操作。由于内部数组永远不改动，因此迭代不需要锁定，速度也很快。如果大量使用，CopyOnWriteArrayList的性能将大受影响，但是对于观察者模式
+却是很好的，因为它们几乎不改动，并经常被遍历。
+
+规则：
+在同步区域之外被调用的外来方法被称作“开放调用(open call)”
+同步区尽量就在内部进行操作，在同步区域内做尽可能少的工作，获得锁，处理数据，释放锁，都在内部完成
