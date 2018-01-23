@@ -1,0 +1,88 @@
+-------------------------------------------------------------------------------------------------------------------------
+静态工厂和构造器有个共同的局限性：它们都不能很好地扩展到大量的可选参数。如果有大量的参数要设置，这两种方法可能都需要提供
+很多个函数来实现需求。并且对于单一的方法函数的参数顺序一旦固定则，仅最后一个参数可作为变参数（如果需要的话）。调用函数的
+时候你不得不为那些你并不关心的属性提供相应的值，并且随着参数的不断增多，这种方式越来越让人难以忍受。
+
+遇到了多参数的构造器的时候，有一种补救办法是使用JavaBeans模式：这种模式实际上是先调用无参的构造函数来创建对象，然后再调用
+属性的setter方法来进行相应设置。这种模式的问题在于构造的过程被分到了多个步骤上，这样一来可能会使JavaBean处于不一致的状态，
+这会导致失败，调试起来十分困难。还有一方面，这种模式阻止了把类做成不可变类的可能，这就需要用其他的方法来确保它是线程安全的。
+另外一种方法是Builder模式，这种模式下不直接生成需要的对象，而是让客户端利用所有必要的参数调用构造器（或静态工厂方法）。
+得到一个builder对象，然后客户端在builder对象上调用类似于setter的方法来设置相关参数，最后调用build方法来生成不可变的对象，
+这个builder是它构建的类的静态成员类。所示例子如下：
+public class NutritionFacts {
+	private final int servingSize;
+	private final int servings;
+	private final int calories;
+	private final int fat;
+	private final int sodium;
+	private final int carbohydrate;
+
+	public static class Builder {
+		// Required parameters
+		private final int servingSize;
+		private final int servings;
+
+		// Optional parameters - initialized to default values
+		private int calories = 0;
+		private int fat = 0;
+		private int carbohydrate = 0;
+		private int sodium = 0;
+
+		public Builder(int servingSize, int servings) {
+			this.servingSize = servingSize;
+			this.servings = servings;
+		}
+
+		public Builder calories(int val) {
+			calories = val;
+			return this;
+		}
+
+		public Builder fat(int val) {
+			fat = val;
+			return this;
+		}
+
+		public Builder carbohydrate(int val) {
+			carbohydrate = val;
+			return this;
+		}
+
+		public Builder sodium(int val) {
+			sodium = val;
+			return this;
+		}
+
+		public NutritionFacts build() {
+			return new NutritionFacts(this);
+		}
+	}
+
+	private NutritionFacts(Builder builder) {
+		servingSize = builder.servingSize;
+		servings = builder.servings;
+		calories = builder.calories;
+		fat = builder.fat;
+		sodium = builder.sodium;
+		carbohydrate = builder.carbohydrate;
+	}
+
+	public static void main(String[] args) {
+		NutritionFacts cocaCola = new NutritionFacts.Builder(240, 8)
+				.calories(100).sodium(35).carbohydrate(27).build();
+	}
+}
+
+Builder模式可以对其参数加以约束，build方法可以检验这些约束条件，将参数从builder拷贝到对象中之后，并在对象域而不是builder域中对它们
+进行检验，如果违反了任何约束，build方法就应该抛出IllegalStateException。另一种强加约束条件的方法是用多个setter方法对某个约束条件必须
+持有的所有参数进行检查。如果没有得到满足，则setter应该抛出IllegalArgumentException。这样一旦传递的参数无效就会发现约束条件失败，而不用推迟到调用build时。
+设置了参数的builder生成了一个很好的抽象工厂，用这种方法，需要有个类型来表示builder，一般可以选择泛型来做一个满足所有条件的builder。
+// A builder for objects of type T  
+public interface Builder<T> {  
+    public T build();  
+}  
+带有Builder实例的方法通常利用有限制的通配符类型来约束构建器的类型参数，例如，利用不同的结点的构建器来初始化树的方式如下：
+Tree buildTree(Builder<? extends Node> nodeBuilder) {}  
+
+Builder模式的不足体现在为了创建对象必须先创建一个中间对象，builder模式还使得构造的过程更加冗长。如果在设计一个类的时候这个类就的构造器需要大量的参数或者这个类
+的构造器在不断改进迭代的过程中需要不断增长参数，那么在设计类的起初就应该使用构建器。
