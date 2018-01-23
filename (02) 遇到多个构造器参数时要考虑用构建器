@@ -1,14 +1,13 @@
--------------------------------------------------------------------------------------------------------------------------
-¾²Ì¬¹¤³§ºÍ¹¹ÔìÆ÷ÓÐ¸ö¹²Í¬µÄ¾ÖÏÞÐÔ£ºËüÃÇ¶¼²»ÄÜºÜºÃµØÀ©Õ¹µ½´óÁ¿µÄ¿ÉÑ¡²ÎÊý¡£Èç¹ûÓÐ´óÁ¿µÄ²ÎÊýÒªÉèÖÃ£¬ÕâÁ½ÖÖ·½·¨¿ÉÄÜ¶¼ÐèÒªÌá¹©
-ºÜ¶à¸öº¯ÊýÀ´ÊµÏÖÐèÇó¡£²¢ÇÒ¶ÔÓÚµ¥Ò»µÄ·½·¨º¯ÊýµÄ²ÎÊýË³ÐòÒ»µ©¹Ì¶¨Ôò£¬½ö×îºóÒ»¸ö²ÎÊý¿É×÷Îª±ä²ÎÊý£¨Èç¹ûÐèÒªµÄ»°£©¡£µ÷ÓÃº¯ÊýµÄ
-Ê±ºòÄã²»µÃ²»ÎªÄÇÐ©Äã²¢²»¹ØÐÄµÄÊôÐÔÌá¹©ÏàÓ¦µÄÖµ£¬²¢ÇÒËæ×Å²ÎÊýµÄ²»¶ÏÔö¶à£¬ÕâÖÖ·½Ê½Ô½À´Ô½ÈÃÈËÄÑÒÔÈÌÊÜ¡£
+é™æ€å·¥åŽ‚å’Œæž„é€ å™¨æœ‰ä¸ªå…±åŒçš„å±€é™æ€§ï¼šå®ƒä»¬éƒ½ä¸èƒ½å¾ˆå¥½åœ°æ‰©å±•åˆ°å¤§é‡çš„å¯é€‰å‚æ•°ã€‚å¦‚æžœæœ‰å¤§é‡çš„å‚æ•°è¦è®¾ç½®ï¼Œè¿™ä¸¤ç§æ–¹æ³•å¯èƒ½éƒ½éœ€è¦æä¾›å¾ˆå¤šä¸ªå‡½æ•°
+æ¥å®žçŽ°éœ€æ±‚ã€‚å¹¶ä¸”å¯¹äºŽå•ä¸€çš„æ–¹æ³•å‡½æ•°çš„å‚æ•°é¡ºåºä¸€æ—¦å›ºå®šåˆ™ï¼Œä»…æœ€åŽä¸€ä¸ªå‚æ•°å¯ä½œä¸ºå˜å‚æ•°ï¼ˆå¦‚æžœéœ€è¦çš„è¯ï¼‰ã€‚è°ƒç”¨å‡½æ•°çš„æ—¶å€™ä½ ä¸å¾—ä¸ä¸ºé‚£äº›ä½ 
+å¹¶ä¸å…³å¿ƒçš„å±žæ€§æä¾›ç›¸åº”çš„å€¼ï¼Œå¹¶ä¸”éšç€å‚æ•°çš„ä¸æ–­å¢žå¤šï¼Œè¿™ç§æ–¹å¼è¶Šæ¥è¶Šè®©äººéš¾ä»¥å¿å—ã€‚
 
-Óöµ½ÁË¶à²ÎÊýµÄ¹¹ÔìÆ÷µÄÊ±ºò£¬ÓÐÒ»ÖÖ²¹¾È°ì·¨ÊÇÊ¹ÓÃJavaBeansÄ£Ê½£ºÕâÖÖÄ£Ê½Êµ¼ÊÉÏÊÇÏÈµ÷ÓÃÎÞ²ÎµÄ¹¹Ôìº¯ÊýÀ´´´½¨¶ÔÏó£¬È»ºóÔÙµ÷ÓÃ
-ÊôÐÔµÄsetter·½·¨À´½øÐÐÏàÓ¦ÉèÖÃ¡£ÕâÖÖÄ£Ê½µÄÎÊÌâÔÚÓÚ¹¹ÔìµÄ¹ý³Ì±»·Öµ½ÁË¶à¸ö²½ÖèÉÏ£¬ÕâÑùÒ»À´¿ÉÄÜ»áÊ¹JavaBean´¦ÓÚ²»Ò»ÖÂµÄ×´Ì¬£¬
-Õâ»áµ¼ÖÂÊ§°Ü£¬µ÷ÊÔÆðÀ´Ê®·ÖÀ§ÄÑ¡£»¹ÓÐÒ»·½Ãæ£¬ÕâÖÖÄ£Ê½×èÖ¹ÁË°ÑÀà×ö³É²»¿É±äÀàµÄ¿ÉÄÜ£¬Õâ¾ÍÐèÒªÓÃÆäËûµÄ·½·¨À´È·±£ËüÊÇÏß³Ì°²È«µÄ¡£
-ÁíÍâÒ»ÖÖ·½·¨ÊÇBuilderÄ£Ê½£¬ÕâÖÖÄ£Ê½ÏÂ²»Ö±½ÓÉú³ÉÐèÒªµÄ¶ÔÏó£¬¶øÊÇÈÃ¿Í»§¶ËÀûÓÃËùÓÐ±ØÒªµÄ²ÎÊýµ÷ÓÃ¹¹ÔìÆ÷£¨»ò¾²Ì¬¹¤³§·½·¨£©¡£
-µÃµ½Ò»¸öbuilder¶ÔÏó£¬È»ºó¿Í»§¶ËÔÚbuilder¶ÔÏóÉÏµ÷ÓÃÀàËÆÓÚsetterµÄ·½·¨À´ÉèÖÃÏà¹Ø²ÎÊý£¬×îºóµ÷ÓÃbuild·½·¨À´Éú³É²»¿É±äµÄ¶ÔÏó£¬
-Õâ¸öbuilderÊÇËü¹¹½¨µÄÀàµÄ¾²Ì¬³ÉÔ±Àà¡£ËùÊ¾Àý×ÓÈçÏÂ£º
+é‡åˆ°äº†å¤šå‚æ•°çš„æž„é€ å™¨çš„æ—¶å€™ï¼Œæœ‰ä¸€ç§è¡¥æ•‘åŠžæ³•æ˜¯ä½¿ç”¨JavaBeansæ¨¡å¼ï¼šè¿™ç§æ¨¡å¼å®žé™…ä¸Šæ˜¯å…ˆè°ƒç”¨æ— å‚çš„æž„é€ å‡½æ•°æ¥åˆ›å»ºå¯¹è±¡ï¼Œç„¶åŽå†è°ƒç”¨å±žæ€§çš„
+setteræ–¹æ³•æ¥è¿›è¡Œç›¸åº”è®¾ç½®ã€‚è¿™ç§æ¨¡å¼çš„é—®é¢˜åœ¨äºŽæž„é€ çš„è¿‡ç¨‹è¢«åˆ†åˆ°äº†å¤šä¸ªæ­¥éª¤ä¸Šï¼Œè¿™æ ·ä¸€æ¥å¯èƒ½ä¼šä½¿JavaBeanå¤„äºŽä¸ä¸€è‡´çš„çŠ¶æ€ï¼Œè¿™ä¼šå¯¼è‡´å¤±è´¥ï¼Œ
+è°ƒè¯•èµ·æ¥ååˆ†å›°éš¾ã€‚è¿˜æœ‰ä¸€æ–¹é¢ï¼Œè¿™ç§æ¨¡å¼é˜»æ­¢äº†æŠŠç±»åšæˆä¸å¯å˜ç±»çš„å¯èƒ½ï¼Œè¿™å°±éœ€è¦ç”¨å…¶ä»–çš„æ–¹æ³•æ¥ç¡®ä¿å®ƒæ˜¯çº¿ç¨‹å®‰å…¨çš„ã€‚
+å¦å¤–ä¸€ç§æ–¹æ³•æ˜¯Builderæ¨¡å¼ï¼Œè¿™ç§æ¨¡å¼ä¸‹ä¸ç›´æŽ¥ç”Ÿæˆéœ€è¦çš„å¯¹è±¡ï¼Œè€Œæ˜¯è®©å®¢æˆ·ç«¯åˆ©ç”¨æ‰€æœ‰å¿…è¦çš„å‚æ•°è°ƒç”¨æž„é€ å™¨ï¼ˆæˆ–é™æ€å·¥åŽ‚æ–¹æ³•ï¼‰ã€‚å¾—åˆ°ä¸€ä¸ª
+builderå¯¹è±¡ï¼Œç„¶åŽå®¢æˆ·ç«¯åœ¨builderå¯¹è±¡ä¸Šè°ƒç”¨ç±»ä¼¼äºŽsetterçš„æ–¹æ³•æ¥è®¾ç½®ç›¸å…³å‚æ•°ï¼Œæœ€åŽè°ƒç”¨buildæ–¹æ³•æ¥ç”Ÿæˆä¸å¯å˜çš„å¯¹è±¡ï¼Œè¿™ä¸ªbuilderæ˜¯
+å®ƒæž„å»ºçš„ç±»çš„é™æ€æˆå‘˜ç±»ã€‚æ‰€ç¤ºä¾‹å­å¦‚ä¸‹ï¼š
 public class NutritionFacts {
 	private final int servingSize;
 	private final int servings;
@@ -73,16 +72,17 @@ public class NutritionFacts {
 	}
 }
 
-BuilderÄ£Ê½¿ÉÒÔ¶ÔÆä²ÎÊý¼ÓÒÔÔ¼Êø£¬build·½·¨¿ÉÒÔ¼ìÑéÕâÐ©Ô¼ÊøÌõ¼þ£¬½«²ÎÊý´Óbuilder¿½±´µ½¶ÔÏóÖÐÖ®ºó£¬²¢ÔÚ¶ÔÏóÓò¶ø²»ÊÇbuilderÓòÖÐ¶ÔËüÃÇ
-½øÐÐ¼ìÑé£¬Èç¹ûÎ¥·´ÁËÈÎºÎÔ¼Êø£¬build·½·¨¾ÍÓ¦¸ÃÅ×³öIllegalStateException¡£ÁíÒ»ÖÖÇ¿¼ÓÔ¼ÊøÌõ¼þµÄ·½·¨ÊÇÓÃ¶à¸ösetter·½·¨¶ÔÄ³¸öÔ¼ÊøÌõ¼þ±ØÐë
-³ÖÓÐµÄËùÓÐ²ÎÊý½øÐÐ¼ì²é¡£Èç¹ûÃ»ÓÐµÃµ½Âú×ã£¬ÔòsetterÓ¦¸ÃÅ×³öIllegalArgumentException¡£ÕâÑùÒ»µ©´«µÝµÄ²ÎÊýÎÞÐ§¾Í»á·¢ÏÖÔ¼ÊøÌõ¼þÊ§°Ü£¬¶ø²»ÓÃÍÆ³Ùµ½µ÷ÓÃbuildÊ±¡£
-ÉèÖÃÁË²ÎÊýµÄbuilderÉú³ÉÁËÒ»¸öºÜºÃµÄ³éÏó¹¤³§£¬ÓÃÕâÖÖ·½·¨£¬ÐèÒªÓÐ¸öÀàÐÍÀ´±íÊ¾builder£¬Ò»°ã¿ÉÒÔÑ¡Ôñ·ºÐÍÀ´×öÒ»¸öÂú×ãËùÓÐÌõ¼þµÄbuilder¡£
+Builderæ¨¡å¼å¯ä»¥å¯¹å…¶å‚æ•°åŠ ä»¥çº¦æŸï¼Œbuildæ–¹æ³•å¯ä»¥æ£€éªŒè¿™äº›çº¦æŸæ¡ä»¶ï¼Œå°†å‚æ•°ä»Žbuilderæ‹·è´åˆ°å¯¹è±¡ä¸­ä¹‹åŽï¼Œå¹¶åœ¨å¯¹è±¡åŸŸè€Œä¸æ˜¯builderåŸŸä¸­å¯¹å®ƒä»¬
+è¿›è¡Œæ£€éªŒï¼Œå¦‚æžœè¿åäº†ä»»ä½•çº¦æŸï¼Œbuildæ–¹æ³•å°±åº”è¯¥æŠ›å‡ºIllegalStateExceptionã€‚å¦ä¸€ç§å¼ºåŠ çº¦æŸæ¡ä»¶çš„æ–¹æ³•æ˜¯ç”¨å¤šä¸ªsetteræ–¹æ³•å¯¹æŸä¸ªçº¦æŸæ¡ä»¶å¿…
+é¡»æŒæœ‰çš„æ‰€æœ‰å‚æ•°è¿›è¡Œæ£€æŸ¥ã€‚å¦‚æžœæ²¡æœ‰å¾—åˆ°æ»¡è¶³ï¼Œåˆ™setteråº”è¯¥æŠ›å‡ºIllegalArgumentExceptionã€‚è¿™æ ·ä¸€æ—¦ä¼ é€’çš„å‚æ•°æ— æ•ˆå°±ä¼šå‘çŽ°çº¦æŸæ¡ä»¶å¤±è´¥ï¼Œ
+è€Œä¸ç”¨æŽ¨è¿Ÿåˆ°è°ƒç”¨buildæ—¶ã€‚
+è®¾ç½®äº†å‚æ•°çš„builderç”Ÿæˆäº†ä¸€ä¸ªå¾ˆå¥½çš„æŠ½è±¡å·¥åŽ‚ï¼Œç”¨è¿™ç§æ–¹æ³•ï¼Œéœ€è¦æœ‰ä¸ªç±»åž‹æ¥è¡¨ç¤ºbuilderï¼Œä¸€èˆ¬å¯ä»¥é€‰æ‹©æ³›åž‹æ¥åšä¸€ä¸ªæ»¡è¶³æ‰€æœ‰æ¡ä»¶çš„builderã€‚
 // A builder for objects of type T  
 public interface Builder<T> {  
     public T build();  
 }  
-´øÓÐBuilderÊµÀýµÄ·½·¨Í¨³£ÀûÓÃÓÐÏÞÖÆµÄÍ¨Åä·ûÀàÐÍÀ´Ô¼Êø¹¹½¨Æ÷µÄÀàÐÍ²ÎÊý£¬ÀýÈç£¬ÀûÓÃ²»Í¬µÄ½áµãµÄ¹¹½¨Æ÷À´³õÊ¼»¯Ê÷µÄ·½Ê½ÈçÏÂ£º
+å¸¦æœ‰Builderå®žä¾‹çš„æ–¹æ³•é€šå¸¸åˆ©ç”¨æœ‰é™åˆ¶çš„é€šé…ç¬¦ç±»åž‹æ¥çº¦æŸæž„å»ºå™¨çš„ç±»åž‹å‚æ•°ï¼Œä¾‹å¦‚ï¼Œåˆ©ç”¨ä¸åŒçš„ç»“ç‚¹çš„æž„å»ºå™¨æ¥åˆå§‹åŒ–æ ‘çš„æ–¹å¼å¦‚ä¸‹ï¼š
 Tree buildTree(Builder<? extends Node> nodeBuilder) {}  
 
-BuilderÄ£Ê½µÄ²»×ãÌåÏÖÔÚÎªÁË´´½¨¶ÔÏó±ØÐëÏÈ´´½¨Ò»¸öÖÐ¼ä¶ÔÏó£¬builderÄ£Ê½»¹Ê¹µÃ¹¹ÔìµÄ¹ý³Ì¸ü¼ÓÈß³¤¡£Èç¹ûÔÚÉè¼ÆÒ»¸öÀàµÄÊ±ºòÕâ¸öÀà¾ÍµÄ¹¹ÔìÆ÷ÐèÒª´óÁ¿µÄ²ÎÊý»òÕßÕâ¸öÀà
-µÄ¹¹ÔìÆ÷ÔÚ²»¶Ï¸Ä½øµü´úµÄ¹ý³ÌÖÐÐèÒª²»¶ÏÔö³¤²ÎÊý£¬ÄÇÃ´ÔÚÉè¼ÆÀàµÄÆð³õ¾ÍÓ¦¸ÃÊ¹ÓÃ¹¹½¨Æ÷¡£
+Builderæ¨¡å¼çš„ä¸è¶³ä½“çŽ°åœ¨ä¸ºäº†åˆ›å»ºå¯¹è±¡å¿…é¡»å…ˆåˆ›å»ºä¸€ä¸ªä¸­é—´å¯¹è±¡ï¼Œbuilderæ¨¡å¼è¿˜ä½¿å¾—æž„é€ çš„è¿‡ç¨‹æ›´åŠ å†—é•¿ã€‚å¦‚æžœåœ¨è®¾è®¡ä¸€ä¸ªç±»çš„æ—¶å€™è¿™ä¸ªç±»å°±çš„æž„é€ 
+å™¨éœ€è¦å¤§é‡çš„å‚æ•°æˆ–è€…è¿™ä¸ªç±»çš„æž„é€ å™¨åœ¨ä¸æ–­æ”¹è¿›è¿­ä»£çš„è¿‡ç¨‹ä¸­éœ€è¦ä¸æ–­å¢žé•¿å‚æ•°ï¼Œé‚£ä¹ˆåœ¨è®¾è®¡ç±»çš„èµ·åˆå°±åº”è¯¥ä½¿ç”¨æž„å»ºå™¨ã€‚
