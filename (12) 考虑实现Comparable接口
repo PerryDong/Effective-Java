@@ -1,0 +1,20 @@
+CompareTo方法并没有在Object方法中声名，而且他是Comparable接口中唯一的方法，compareTo不但允许进行简单的相等性比较，而且允许
+执行顺序比较，除此之外，它与Object的equals方法具有相似的特征。
+ 
+一旦类实现了Comparable接口，它就可以跟许多泛型算法以及依赖于该接口的集合实现进行协作，Java平台类库中的所有值类都实现了
+Comparable接口。如果编写一个値类，它具有非常明显的内在排序关系，比如按字母排序、按数值排序或者按年代排序，那么就应该坚决
+考虑实现这个接口。
+
+CompareTo的约定如下：
+将这个对象与指定的对象进行比较。当该对象小于、等于或者大于指定对象的时候，分别返回一个负整数，零或者正整数，如果由于指定对
+象的类型而无法与该对象进行比较，则抛出ClassCastException。
+在下面的说明中，符号sgn表示数学中的signum函数，它根据表达式的值为负值，零和正值分别返回-1,0或1。
+1） 实现者必须确保所有的x和y都满足sgn(x.compareTo(y)) == -sgn(y.compareTo(x))。这也表明当且仅当y.compareTo(x)抛出异常时，
+	x.compareTo(y)才必须抛出异常。
+2） 实现者必需要确保这个比较关系是可传递的：(x.compareTo(y) > 0 && y.compareTo(z) > 0)则有x.compareTo(z) > 0
+3） 实现者必须确保x.compareTo(y) == 0暗示着所有的z都满足sgn(x.compareTo(z)) == sgn(y.compareTo(z))
+4） 强烈建议(x.compareTo(y) == 0 ) == (x.equals(y))，但是这并非绝对必要的。一般来说，任何实现了Comparable接口的类，若违反了
+	这个条件，都应该予以说明，推荐使用这样的说法：“Note: this class has a natural ordering that is inconsistent with equals.”
+在类的内部，任何合理的顺序关系都可以满足compareTo约束，与equals不同的是，在跨越不同的类的时候，compareTo可以不做比较：如果两
+个被比较的对象引用不同类的对象，comapreTo可以抛出ClassCastException。通常这正是compareTo在这种情况下应该做的事情，如果类设置
+了正确的参数，这也正是它所要做的事情。

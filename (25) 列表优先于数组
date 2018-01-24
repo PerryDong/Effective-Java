@@ -1,0 +1,75 @@
+数组与泛型相比有两个重要的不同点。首先数组是协变的，表示如果Sub为super的子类型，那么数组类型Sub[]就是super[]的子类型。
+相反泛型则是不可变的。对于任意两个不同的类型Type1和Type2，List<Type1>既不是List<Type2>的子类型，也不是List<Type2>的超类型。
+第二，数组是可具体化的。因此数组会在运行时才知道并检查他们的元素类型约束。泛型是通过擦除来实现的。因此泛型只在编译时强化他
+们的类型信息，并在运行时丢弃（或者擦除）他们元素的类型信息。创建泛型、参数化类型或者是类型参数的数组都是非法的。例如：
+List<String>[] stringLists = new List<String>[1];  
+List<Integer> intList = Arrays.asList(42);  
+Object[] objects = stringLists;  
+objects[0] = intList;  
+String s = stringLists[0].get(0);  
+假设第一行是合法的，由于数组是协变的第3行将List<Integer>保存到Object数组里唯一的元素中这是合法的。而第四行将List<Integer>
+保存到Object数组里的元素中也是合法的，这是因为泛型是通过擦除来实现的。List<Integer>在运行时类型只是List。假设上述条件都满足，
+但是最后一行当取出一对应的元素的时候，在运行时我们发现，怎么是个Integer？目标不是String吗？为了防止这种问题出现，第1行就产生
+了一个编译时错误。
+
+像E、List<E>、List<String>这样的类型应称作不可具体化的类型。唯一可具体化的参数化类型是无限制的通配符类型，如List<?>和Map<?,?>。
+虽然不常用，但是创建无限制通配类型的数组是合法的。
+当得到泛型数组创建错误时，最好的解决办法通常是优先使用集合类型List<E>，而不是数组类型E[]。这样可能会损失一些性能或者简洁性，
+但是换回的却是更高的类型安全和互用性。考虑如下示例：
+static Object reduce(List list, Function f, Object initVal) {  
+    synchronized(list) {  
+        Object result = initVal;  
+        for (Object o : list)  
+            result = f.apply(result, o);  
+        return result;  
+    }  
+}  
+  
+interface Function {  
+    Object apply(Object arg1, Object arg2);  
+}  
+
+我们不应该在同步区域中调用外来的方法，因此，要在持有锁的时候修改reduce方法来复制列表中的内容，在这备份上来执行操作。下面是一个使用
+JDK1.5之前的toArray的做法(它在内部锁定列表)：
+static Object reduce(List list, Function f, Object initVal) {  
+    Object[] snapshot = list.toArray();//Locks list internally  
+    Object result = initVal;  
+    for (Object e: snapshot)  
+        result = f.apply(result, e);  
+}  
+
+好了，再让我们来试一泛型版本：
+interface Function<T> {  
+    T apply(T arg1, T arg2);  
+}  
+  
+// Naive generic version of reduction - won't compile!  
+static <E> E reduce(List<E> list, Function<E> f, E initVal) {  
+    E[] snapshot = list.toArray(); // Locks list  
+    E result = initVal;  
+    for (E e: snapshot)  
+        result = f.apply(result, e);  
+    return result;  
+}  
+
+现在将一个Object[]赋给E[]的变量显然出现了问题(假设可行)。解决这个问题好像加一个强制类弄转换就可以办到了。但是加了强转以后
+又会得到一条警告。编译器无法在运行时检查转换的安全性，因为它在运行时不知道E是什么类型，当然这只是一条警告，但是要注意到，
+编译时类开E，可以是String、Integer等等，但是运行时类型却成了Object(因为运行时泛型的擦除动作)，这是很危险的。为了解决这个
+问题，我们可以用列表来试一试：
+// List-based generic reduction  
+static <E> E reduce(List<E> list, Function<E> f, E initVal) {  
+    List<E> snapshot;  
+    synchronized(list) {  
+        snapshot = new ArrayList<E>(list);  
+    }  
+    E result = initVal;  
+    for (E e: snapshot)  
+        result = f.apply(result, e);  
+        return result;  
+ }  
+ 注意，这段代码使用了synchronized代码块(看了源码，toArray与ArrayList构造函数都是使用同一个复制函数，不知道是不是因为JDK
+ 版本的原因)。这个版本的代码比数组版的代码稍微长了一些，但是可以确定在运行时不会得到转换异常。
+ 
+总之，数组和泛型有着非常不同的类型规则。数组是协变且可具体化的，泛型是不可变的且是可被擦除的。因此，数组提供了运行时的类型
+安全，但是没有编译时的类型安全，反之，泛弄也一样，一般来说，数组和泛型不能很好的混合使用，如果发现自己将它们混合起来使用，
+并且得到了编译时错误或警告，那么就要考虑用列表代替数组。

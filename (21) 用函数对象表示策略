@@ -1,0 +1,25 @@
+函数指针的主要用途就是实现策略模式。为了在Java中实现这种模式，要声明一个接口来表示该策略，并且为每个具体策略声明一个实现了
+该接口的类。当一个具体的策略只被使用一次时，通常使用匿名内部类来声明和实例化这个具体策略类。当一个具体策略是设计用来重复使
+用的时候，它的类通常要被实现为私有的静态成员，并通过共有的静态final域被导出，其类型为该策略接口。
+例如：
+Arrays.sort(StringArray,new Comparator<String>(){
+    public int compare(String s1, String s2) {
+        return s1.length() - s2.length();
+    }
+});
+以这种方式使用匿名类时，将会在每次执行调用的时候创建一个新的实例。如果它被重复执行，考虑将函数对象存储到一个私有的静态final
+域里，并重用它。
+public class Host {
+    private static class StrLenCmp implements Comparator<String>,Serializable{
+ 
+        @Override
+        public int compare(String s1, String s2) {
+            return s1.length() - s2.length();
+        }
+         
+    }
+     
+    public static final Comparator<String> STRING_LENGTH_COMPARATOR = new StrLenCmp();
+     
+    ...
+}

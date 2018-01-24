@@ -1,0 +1,48 @@
+看如下一个泛型的例子：
+public class Stack<E> {  
+    private E[] elements;  
+    private int size = 0;  
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;  
+      
+    public Stack() {  
+        elements = new E[DEFAULT_INITIAL_CAPACITY];  
+    }  
+  
+    public void push(E e) {  
+        ensureCapacity();  
+        elements[size++] = e;  
+    }  
+  
+    public E pop() {  
+        if (size == 0)  
+            throw new EmptyStackException();  
+        E result = elements[--size];  
+        elements[size] = null;  
+        return result;  
+    }  
+      
+    public boolean isEmpty() {  
+        return size == 0;  
+    }  
+      
+    private void ensureCapacity() {  
+        if (elements.length == size)  
+            elements = Arrays.copyOf(elements, 2 * size + 1);  
+    }  
+}  
+上面这个泛型栈的例子会存在一个错误，25条说过，E是不可具化的，而数组是可具化的，所以不能用E来使用诸如new E[]这样的数组申请方
+法，为了解决这个问题，我们可以将new E[]改为new Object[]。至此，又得到了一条警告信息，因为我们要把Object型的数组赋给E型，因为
+编译器无法确定E的具体类型，所以警告这是不是类型安全的。但是由于elements只有在push中使用，且压进的是E型元素，所以我们可以判断
+出这是安全的，因此加上强制类型转换(E[])new Object[...]，这是解决上面错误问题的第一种方法。但是必须确保未受检的转换不会危及到
+程序的类型安全，相关的数组保存在一个私有域中，永远不会被返回到客户端去，或者传递给任何方法，也就是说存在不稳定的因素，但是是
+完成在服务端可控的。一旦证明了未受检转换是安全的，就要在尽可能小的范围内禁止警告，在这种情况下，构造器只包含未受检的数组创
+建，因此可以在整个构造器中禁止这条警告。 
+消除错误的第二种方法是直接把elements声名为Object类型的，但是，这又会在
+E result = elements[--size];  引入一条错误，同样的，我们可以加入强制类型转换来解决这个问题：E result = (E)elements[--size];  
+与第一种情况类似。这也会得到一条警告，同样的，也可证明这种情况下是安全的，所以可以禁止该警告。依据最小化原则，应该直接在此名上加注释来禁止警告。
+
+这两种方法，一般来说禁止数组类型的未受检转换比禁止标题类型更危险，所以建议使用第二种方法。但是在比这个例子更实际的泛型中，
+或许代码中会有多个地方需要从数组中读取元素，因此第一种方法比第二种方法开销更小一些，这也是第一种方法更常用的原因。
+
+总之，使用泛型比使用需要在客户端代码中进行转化的类型来的更安全。也更容易，在设计新类的时候，要确保它们不需要这种转换就可以使用。
+这通常意味着要把类做成是泛型的。

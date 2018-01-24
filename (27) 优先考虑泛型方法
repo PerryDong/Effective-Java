@@ -1,0 +1,69 @@
+泛型方法的一个显著特征是，无需明确指定类型参数的值，不像调用泛型构造器的时候是必须要指定类型参数的，因为泛型方法的类型会存在
+一个类型推导的过程（编译器通过检查方法参数的类型来计算类型的值）。
+在调用泛型构造器的时候，要明确传递类型参数的值可能有点麻烦。类型参数出现在了变量的声明的左右两边，显得冗余：
+Map<String, List<String>> anagrams = new HashMap<String, List<String>>();  
+为了消除这种冗余，可以提供一个泛型静态工厂方法来简化：
+public static <K, V> HashMap<K, V> newHashMap() {  
+    return new HashMap<K, V>();  
+}  
+Map<String, List<String>> map = newHashMap();
+有时会需要创建不可变但是又适合于许多不同类型的对象，由于泛型是通过擦除来实现的，可以给所有的必要的类型参数使用同一个单个对
+象，但是需要一个静态的工厂方法来给每个必要的类型参数分发对象。这种模式叫做“泛型单例工厂”，这种模式最常用于函数对象。假设有一
+个接口，描述了一个方法，该方法接受和返回某个类型T的值：
+public interface UnaryFunction<T> {
+    T apply(T t);
+}
+现在假设要提供一个恒等函数，如果在每次需要的时候都重新创建一个这样会很浪费，因为它是无状态的。如果泛型被具体化，那么每个类型
+都必须持有相应类型的桓等函数，但是在运行时擦除类型信息后，只需要一个泛型单例就够了。请看以下示例：
+public class GenericSingletonFactory {
+	// Generic singleton factory pattern
+	private static UnaryFunction<Object> IDENTITY_FUNCTION = new UnaryFunction<Object>() {
+		public Object apply(Object arg) {
+			return arg;
+		}
+	};
+
+	// IDENTITY_FUNCTION is stateless and its type parameter is
+	// unbounded so it's safe to share one instance across all types.
+	@SuppressWarnings("unchecked")
+	public static <T> UnaryFunction<T> identityFunction() {
+		return (UnaryFunction<T>) IDENTITY_FUNCTION;
+	}
+
+	// Sample program to exercise generic singleton
+	public static void main(String[] args) {
+		String[] strings = { "jute", "hemp", "nylon" };
+		UnaryFunction<String> sameString = identityFunction();
+		for (String s : strings)
+			System.out.println(sameString.apply(s));
+
+		Number[] numbers = { 1, 2.0, 3L };
+		UnaryFunction<Number> sameNumber = identityFunction();
+		for (Number n : numbers)
+			System.out.println(sameNumber.apply(n));
+	}
+}
+通过某个包含该类型参数本身的表达式来限制类型参数是允许的，这就是递归类型限制。最普遍的用途与Comparable接口有关，它定义类型的
+自然顺序。许多方法都带有一个实现Comparable接口的元素列表，为了对列表进行排序，并在其中进行搜索，计算出它的最小值或者最大值
+等等。要完成这其中的任何一项工作要求列表中的每个元素都能够与列表中的其他元素相比较，下面是如何表达这种约束条件的一个示例：
+public static <T extends Comparable<T>> T max(List<T> list) {  
+    ...  
+} 
+限制类型 <T extends Comparable<T>> ，可以读作“针对可以与自身进行比较的每个类型T”。下面的方法就带有上述声明。它根据元素的自然顺序
+计算列表的最大值，编译时没有出现错误或者警告：
+public static  <T extends Comparable<T>>  T max(List<T> list) {
+	Iterator<T> i = list.iterator();
+	T result = i.next();
+	while(i.hasNext()) {
+		T t = i.next();
+		if(t.compareTo(result) > 0) {
+			result = t;
+		}
+	}
+	return result;
+}
+
+总结，泛型方法就像泛型一样，使用起来比要求客户端转换输入参数并返回值的方法来的更加安全，也更加容易。就像类型一样，你应该确
+保新的方法可以不用转换就能使用，这通常意味着要将它们泛型化。并且就像类型一样，还应该将现有的方法泛型化，使新用户使用起来
+更加轻松，且不会破坏现有的客户端。
+

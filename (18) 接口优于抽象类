@@ -1,0 +1,84 @@
+Java程序设计语言提供了接口和抽象类两种机制来定义允许多个实现的类型。这两种机制的主要区别有：
+1）抽象类允许包含某些方法的实现，但是接口则不允许。
+2）为了实现由抽象类定义的类型，类必须成为抽象类的一个子类。
+3）因为Java只允许单继承，所以抽象类作为类型定义受到了极大的限制，但是一个类可以实现多个接口。
+
+接口的优点：
+1）现有的类可以很容易的被更新，以实现新的接口。如果你前期编写了一个类A，后期有在系统中加入了一个新的接口B，当你想让前期编写的
+类来实现这个接口，你只用加上一句implement B，然后在类A中实现里面的方法即可，不会影响到以前的类对类A的使用。
+
+2）接口是定义mixin（混合类型）的理想选择。一个类可以实现多个接口。一个类除了可以实现一个它的主要类型接口之外，还可以加入一些辅
+助接口来实现一些新的功能。
+
+3）接口允许我们构造非层次结构的类型框架。接口可以多继承。
+
+4）接口可以使得类的增强变得安全。
+
+虽然接口不允许包含方法的实现，但是，使用接口来定义类型并不妨碍你为程序员提供实现上的帮助。通过对导出的每个重要的接口都提供
+一个抽象的骨架实现(skeletal implementation)类，把接口和抽象类的优点结合起来。接口的作用仍然是定义类型，但是骨架实现类接管了
+所有与接口实现相关的工作。按照惯例，骨架实现被称为 AbstractInterface，这里的Interface是指所实现的接口的名子。如果设计得当，
+骨架实现可以使程序员很容易提供他们自己的接口实现。例如，下面是一个静态工厂方法，它包含一个完整的，功能全面的List实现。
+static List<Integer> intArrayAsList(final int[] a) {  
+    if (a == null)  
+        throw new NullPointerException();  
+      
+    return new AbstractList<Integer>() {  
+        public Integer get(int i) {  
+            return a[i];  
+        }  
+          
+        @Override  
+        public Integer set(int i, Integer val) {  
+            int oldVal = a[i];  
+            a[i] = val;  
+            return oldVal;  
+        }  
+          
+        public int size() {  
+            return a.length;  
+        }  
+    };  
+}  
+编写骨架实现类相对比较简单，但是有点单调乏味，首先，必须认真研究接口，并确定哪些方法是最为基本的，其他的方法则可以根据它们
+来实现。这些基本的方法将成为骨架实现类中的抽象方法。然后，必须为接口中所有其他的方法提供具体实现。
+public abstract class AbstractMapEntry<K, V> implements Map.Entry<K, V> {
+	// Primitive operations
+	public abstract K getKey();
+
+	public abstract V getValue();
+
+	// Entries in modifiable maps must override this method
+	public V setValue(V value) {
+		throw new UnsupportedOperationException();
+	}
+
+	// Implements the general contract of Map.Entry.equals
+	@Override
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof Map.Entry))
+			return false;
+		Map.Entry<?, ?> arg = (Map.Entry) o;
+		return equals(getKey(), arg.getKey())
+				&& equals(getValue(), arg.getValue());
+	}
+
+	private static boolean equals(Object o1, Object o2) {
+		return o1 == null ? o2 == null : o1.equals(o2);
+	}
+
+	// Implements the general contract of Map.Entry.hashCode
+	@Override
+	public int hashCode() {
+		return hashCode(getKey()) ^ hashCode(getValue());
+	}
+
+	private static int hashCode(Object obj) {
+		return obj == null ? 0 : obj.hashCode();
+	}
+}
+规则：
+接口通常是定义允许多个实现类型的最佳途径。这个规则有个例外，就是当演变的容易性比灵活性和功能性更重要的时候，这时应该使用
+抽象类来定义类型，但前提是必须理解并且可以接受这些局限性。如果导出了一个重要的接口。就应该坚决考虑同时提供骨架实现类。
+最后，应该尽可能谨慎地设计所有的公有接口， 并通过编写多个实现来对它们进行全面的测试。

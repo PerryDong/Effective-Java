@@ -1,0 +1,38 @@
+当类实现接口时，接口就充当可以引用这个类的实例的类型（type）。因此类实现了接口，就表明客户端可以对这个类的实例实施某些动作。
+为了其他目的而定义接口是不恰当的。
+
+有一种接口被称为常量接口（constant interface），他不满足上面的条件。这种接口没有包含任何方法，他只包含静态的final域，每个域
+都到处一个常量。使用这些常量的类实现这个接口，以避免用类名来修饰常量名。
+public interface PhysicalConstants {
+    //阿伏伽德罗数
+    static final double AVOGADROS_NUMBER = 6.02214199e23;
+
+    //玻尔兹曼常数
+    static final double BOLRZMANN_CONSTANT = 1.3806503E-23;
+
+    //电子质量
+    static final double ELECTRON_MASS = 9.10938188E-31;
+}
+常量接口模式是对接口的不良使用。类在内部使用某些常量，这纯粹是实现细节。实现常量接口，会导致把这样的实现细节泄露到该类的导出API中。
+如果要导出常量，可以有几种合理的选择方案。
+1） 如果这些常量与某个现有的类或者接口紧密相关，就应该把这些常量添加到这个类或者接口中。例如，在java平台类库中所有的数值包装类，
+比如Integer和Double，都导出了MIN_VALUE和MAX_VALUE常量。
+
+2） 如果这些常量最好被看做枚举类型的成员，就应该用枚举类型（enum type）（见30条）来导出这些常量。
+
+3） 使用不可实例化的工具类（utility class）（见4条）来导出这些常量
+public class PhysicalConstants {
+
+    private PhysicalConstants(){}
+    //阿伏伽德罗数
+    public static final double AVOGADROS_NUMBER = 6.02214199e23;
+
+    //玻尔兹曼常数
+    public static final double BOLRZMANN_CONSTANT = 1.3806503E-23;
+
+    //电子质量
+    public static final double ELECTRON_MASS = 9.10938188E-31;
+}
+
+规则：
+接口应该只被用来定义类型，它们不应该被用来导出常量。

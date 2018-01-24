@@ -1,0 +1,120 @@
+继承(inheritance)是实现代码重用的有力手段，但它并非永远是完成这项任务的最佳工作。使用不当会导致软件变得很脆弱。在包的内部使
+用继承是非常安全的，在那里，子类和超类的实现都处于同一个程序员的控制下。对于专门为了继承而设计的并且具有很好的文档说明的类
+来说，使用继承也是非常安全的。然而，对于普通的具体类进行跨超包边界的继承则是非常危险的。本条目并不适用于接口继承。
+
+与方法调用不同的是，继承打破了封装性。子类信赖于其超类中特定功能的实现细节。超类的实现有可能会随着发行版本的不同而有变化，
+子类有可能会被破坏。考虑下面的例子：
+public class InstrumentedHashSet<E> extends HashSet<E> {  
+    // The number of attempted element insertions  
+    private int addCount = 0;  
+      
+    public InstrumentedHashSet() {  
+    }  
+      
+    public InstrumentedHashSet(int initCap, float loadFactor) {  
+        super(initCap, loadFactor);  
+    }  
+      
+    @Override  
+    public boolean add(E e) {  
+        addCount++;  
+        return super.add(e);  
+    }  
+    @Override  
+    public boolean addAll(Collections<? extends E> c) {  
+        addCount += c.size();  
+        return super.addAll(c);  
+    }  
+    public int getAddCount() {  
+        return addCount;  
+    }  
+}  
+
+InstrumentedHashSet<String> s = new InstrumentedHashSet<String>();  
+s.addAll(Arrays.asList("a", "b", "c");  
+当执行完这句代码后，使用s.addCount来返回加入的元素个数时却显示为6，问题在于，addAll方法会调用add方法来完成功能，在HashSet超类链
+中，AbstractCollection实现了addAll方法，代码如下：
+public boolean addAll(Collection<? extends E> c) {  
+    boolean modified = false;  
+    for (E e : c)  
+        if (add(e))  
+            modified = true;  
+    return modified;  
+}  
+可见，当使用addAll方法添加元素时addCount增加了3，而后在addAll方法内部又迭代的调用了add方法，addCount又增加了3，结果为
+addCount变成了6。为了修改这个问题，可以去掉被覆盖的addAll方法，但是它的功能正确性需要依赖于HashSet的addAll方法是在add
+方法上实现的这一事实，这种自用性（self-use）是实现细节，而不是承诺，不能保证在java平台的所有实现中都保持不变，不能保证
+随着上发行版本的不同而不发生变化。
+
+如果在扩展一个类的时候仅仅是增加新的方法而不覆盖现有的方法，这也许看来相对安全一些，但是设想一下，如果超类在后续的发行版
+本中获得了一个新方法，并且和子类中的某一方法只是返回类型不同，那么这样的子类将针法通过编译。如果给子类提供的方法带有与新
+的超类方法完全相同的方法(签名和返回类型都相同)，这又变成了子类覆盖超类的方法问题。此外，子类的方法是否则够遵守新的超类的
+方法的约定也是个值得怀疑的问题，因为当编写子类方法的时候，这个约定根本还没有面世。
+使用“复合(composition)”可以解决上述的问题，不用扩展现有的类，而是在新的类中增加一个私有域。通过“转发”来实现与现有类的交互，
+这样得到手类将会非常稳固。它不信赖于现有类的实现细节。即使现有的类增加了新方法，也不会影响到新类。请看如下的例子：
+public class InstrumentedSet<E> extends ForwardingSet<E> {  
+    private int addCount = 0;  
+      
+    public InstrumentedSet(Set<E> s) {  
+        super(s);  
+    }  
+      
+    @Override  
+    public boolean add(E e) {  
+        addCount++;  
+        return super.add(e);  
+    }  
+      
+    @Override  
+    public boolean addAll(Collection<? extends E> c) {  
+        addCount += c.size();  
+        return super.addAll(c);  
+    }  
+      
+    public int getAddCount() {  
+        return addCount;  
+    }  
+}  
+  
+// Reusable forwarding class  
+public class ForwardingSet<E> implements Set<E> {  
+    private final Set<E> s;  
+    public ForwardingSet(Set<E> s) { this.s = s; }  
+      
+    public void clear() { s.clear(); }  
+    public boolean contains(Object o) { return s.contains(o); }  
+    public boolean isEmpty() { return s.isEmpty(); }  
+    public int size() { return s.size(); }  
+    public Iterator<E> iterator() { return s.iterator(); }  
+    public boolean add(E e) { return s.add(e); }  
+    public boolean remove(Object o) { return s.remove(o); }  
+    public boolean containsAll(Collection<?> c) { return s.containsAll(c); }  
+    public boolean addAll(Collection<? extends E> c) { return s.addAll(c); }  
+    public boolean removeAll(Collection<?> c) { return s.removeAll(c); }  
+    public boolean retainAll(Collection<?> c) { return s.retainAll(c); }  
+    public Object[] toArray() { return s.toArray(); }  
+    public <T> T[] toArray(T[] a) { return s.toArray(a); }  
+    @Override  
+    public boolean equals(Object o) { return s.equals(o); }  
+    @Override  
+    public int hashCode() { return s.hashCode(); }  
+    @Override  
+    public String toString() { return s.toString(); }  
+}
+
+在上面这个例子里构造了两个类，一个是用来扩展操作的包裹类，一个是用来与现有类进行交互的转发类，可以看到，在现在这个实现
+中不再直接扩展Set，而是扩展了他的转发类，而在转发类内部，现有Set类是作为它的一个数据域存在的，转发类实现了Set<E>接口，
+这样他就包括了现有类的基本操作，同时也可能包裹任何Set类型。每个转发动作都直接调用现有类的相应方法并返回相应结果。这样就
+将信赖于Set的实现细节排除在包裹类之外。有的时候，复合和转发的结合被错误的称为"委托(delegation)"。从技术的角度来说，这不
+是委托，除非包装对象把自身传递给被包装的对象。
+包装类几乎没有什么缺点。需要注意的一点是，包装类不适合用在架设框架上(callback framework)，在回调框架中，对象把自身的引用
+传递给其他的对象，用于后续的调用。因为被包装起来的对象并不知道它外面的包装对象，所以它传递一个指向自身的引用(this)，回调
+时避开了外面的包装对象。这被称为SELF问题。
+只有当子类真正是超类的子类型(subtype)时，才适合用继承。对于两个类A和B，只有当两者之间确实存在"is-a"的关系的时候，类B才应
+该扩展A。如果打算让类B扩展类A，就应该确定一个问题：B确实也是A吗？如果不能确定答案是肯定的，那么B就不应该扩展A。如果答案
+是否定的，通常情况下B应该包含A的一个私有实例，并且暴露一个较小的、较简单的API：A本质上不是B的一部分，只是它的实现细节而已。
+
+规则：
+继承的功能非常强大，但是也存在诸多问题，因为它违反了封装原则。只有当子类和超类之间确实存在子类型的关系时，使用继承才是恰
+当的。即使如此，如果子类和超类处在不同的包中，并且超类并不是为了继承而设计的，那么继承将会导致脆弱性。为了避免这种情况，
+可以使用复合和转发机制来代替继承，尤其是当存在适当的接口可以实现包装类的时候。包装类不仅比子类更加健壮，而且功能也更强大。

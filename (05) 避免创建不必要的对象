@@ -1,0 +1,52 @@
+一般来说，最好能重用对象而不是在每次需要的时候就创建一个相同功能的实例，重用快速而又流行，如果对象是不可变的，那么它就始终
+可以被重用。
+对于同时提供了静态工厂方法和构造器的不可变类，通常可以使用静态工厂方法而不是构造器，原因在于构造器在每次被调用的时候都会创
+造一个新的对象，而静态工厂方法则不要求这样做，完成可以返回同一个对象的引用。
+除了重用不可变的对象之外，也可以重用那些已知不会被修改的可变对象。
+public class Person {  
+    private final Date birthDate;  
+  
+    // Other fields, methods, and constructor ommitted  
+    // Don't DO THIS!  
+    public boolean isBabyBoomer() {  
+        // Unnecessary allocation of expensive object  
+        Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));  
+        gmtCal.set(1946, Calendar.JANUARY, 1, 0, 0, 0);  
+        Date boomStart = gmtCal.getTime();  
+        gmtCal.set(1965, Calendar.JANUARY, 1, 0, 0, 0);  
+        Date boomEnd = gmtCal.getTime();  
+        return birthDate.compareTo(boomStart)>=0 && birthDate.compareTo(boomEnd)<0  
+    }  
+}  
+在isBabyBoomer每次被调用的时候，都会新建一个Calendar，一个TimeZone和两个Date实例，这是不必要的，因这它们一旦被创建即无需改变了。
+下面是一个用静态的初始化器的版本，避免了这种效率的情况
+public class Person {  
+    private final Date birthDate;  
+    // Other fields, methods, and constructor ommitted  
+  
+    /** 
+     * The starting and ending dates of the baby boom 
+     */  
+    private static final Date BOOM_START;  
+    private static final Date BOOM_END;  
+  
+    static {  
+        Calendar gmtCal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));  
+        gmtCal.set(1946, Calendar.JANUARY, 1, 0, 0, 0);  
+        Date boomStart = gmtCal.getTime();  
+        gmtCal.set(1965, Calendar.JANUARY, 1, 0, 0, 0);  
+        Date boomEnd = gmtCal.getTime();  
+    }  
+  
+    public boolean isBabyBoomer() {  
+        return birthDate.compareTo(BOOM_START)>=0 && birthDate.compareTo(BOOM_END)<0;  
+    }  
+}  
+注意，小对象的构造器只做很少量的显示工作，所以，小对象的创建和回收是非常廉价的，特别是在现在的JVM上，通过创建附加的对象提升程序的
+清晰性、简洁性和功能性，这通常是件好事。反之，维护自己的对象池来避免创建对象并不是一种好的做法，除非池中的对象是非常重量级的。
+比如说数据库连接池，建立数据库连接的代价非常昂贵，因为重用这些对象很有意义。而且，数据库的许可可能限制你只能使用一定数量的连接，
+尽管如此，维护对象池会把代码弄的很凌乱，难于管理，并且增加了内存的占用还会损害性能。现在的JVM实现具有高度优化的垃圾回收器，其性能
+很容易就会超过轻量级对象池的性能。
+
+注意，在提倡使用保护性拷贝的时候，因重用对象而付出的代价要远远大于因创建重复对象而付出的代价。必要时如果没能实施保护性拷贝，会导致
+潜在的错误和安全漏洞；而不必要地创建对象则只会影响程序的风格和性能。

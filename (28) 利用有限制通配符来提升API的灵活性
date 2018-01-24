@@ -1,0 +1,64 @@
+参数化类型是不可变的。对两个不同类型T1和T2而言，List<T1>与List<T2>没有父子类型关系。
+考虑：
+public class Stack<E> {
+    public Stack();
+    public void push(E e);
+    public E pop();
+    public boolean isEmpty();
+}
+假设增加一个方法，按顺序将一系列的元素放到堆栈中：
+public void pushAll(Iterable<E> src) {
+    for(E e : src)
+        push(e);
+}
+如果尝试这样做：
+Stack<Number> s = new Stack<Number>();
+Iterable<Integer> i = ...;
+s.pushAll(integers);
+从逻辑上讲，这样应该是允许的，因为Integer是Number的子类，应当允许将Integer放到类型为Number的堆栈中。
+但实际运行的时候会提示Iterable<Number>与Iterable<Integer>不兼容。
+
+有限制的通配符类型可以处理这种情况：
+pushAll的输入参数不应该是“E的Iterable接口”，而应该为“E的某个子类型的Iterable接口”，修改为Iterable<? extends E>
+public void pushAll(Iterable<? extends E> src) {
+    for(E e : src)
+        push(e);
+}
+
+假设添加一个popAll方法，从堆栈中弹出每个元素，添加到指定集合中：
+public void popAll(Collection<E> dst) {
+    while(!isEmpty) {
+        dst.add(pop());
+    }
+}
+与未修改的putAll一样，应当允许类型为Number的栈帧放在包括Number在内的父类型中。可修改为：
+public void popAll(Collection<? super E> dst) {
+    while(!isEmpty) {
+        dst.add(pop());
+    }
+}
+Stack<Number> numberStack = new Stack<Number>();  
+Collection<Object> objects = ...;  
+numberStack.popAll(objects);  
+
+在putAll方法中，输入参数的角色是生产者，因为参数提供数据给堆栈使用，在popAll方法中，输入参数的角色是消费者，因为堆栈提供数据给
+参数使用。PESC表示producter-extends, consumer-super. 如果参数化类型表示一个T生产者，就使用<? extends T>；如果它表示一个T消费者，
+就使用<? super T>。所有的comparable和comparator都是消费者。
+
+public class RecursiveTypeBound {
+	public static <T extends Comparable<? super T>> T max(List<? extends T> list) {
+		Iterator<? extends T> i = list.iterator();
+		T result = i.next();
+		while (i.hasNext()) {
+			T t = i.next();
+			if (t.compareTo(result) > 0)
+				result = t;
+		}
+		return result;
+	}
+
+	public static void main(String[] args) {
+		List<String> argList = Arrays.asList(args);
+		System.out.println(max(argList));
+	}
+}

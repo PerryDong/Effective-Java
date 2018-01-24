@@ -1,0 +1,30 @@
+实现Singleton有以下三种方法：
+1） 实现公有静态成员函数，并将之设置为final。例如
+public class Elvis {  
+    public static final Elvis INSTANCE = new Elvis();  
+    private Elvis() { ... }  
+    public void leaveTheBuilding() { ... }  
+}  
+这种方法把构造函数私有化，这样保证了Elvis的全局唯一性。但有一个问题，就是享有特权的客户端可能借助AccessibleObject.setAccessible
+方法，通过反射机制调用私有构造器，这样就破坏了Singleton，一种补救的办法是，修改构造器让他被要求生成第二个实例的时候抛出异常
+
+2） 实例私有化，通过公有的静态方法返回
+public class Elvis {  
+    private static final Elvis INSTANCE = new Elvis();  
+    private Elvis() { ... }  
+    public static Elvis getInstance() { return INSTANCE;  }  
+      
+    public void leaveTheBuilding() { ... }  
+}  
+对于静态方法Elvis.getInstance的所有调用都会返回同一个对象的引用，这样就保证了唯一性，但是还是存在第1种方法里的反射机制进行攻击的问题
+以上两种方法还有一个问题，就是在实现Singleton类序列化的时候，仅仅在声名中加上“implement Serializable”是不够的。为了维护并保证
+Singleton，必须声名所有的实例都是瞬时的(transient)，并提供一个readResolve方法。否则的话每次反序列化的时候都会创建一个新的实例
+
+3）包含单个元素的枚举类型
+public enum Elvis {  
+    INSTANCE;  
+      
+    public void leaveTheBuilding() { ... }  
+}  
+这种方法更加简洁，无偿的提供了序列化机制，绝对防止多次实例化（由Enum保证），即使是在面对复杂的序列化或者反序列化或者反射攻击
+的时候也可以保证唯一。这已成为实现 Singleton的最佳方法

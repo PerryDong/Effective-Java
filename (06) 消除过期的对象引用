@@ -1,0 +1,62 @@
+过期引用(obsolete reference)：指永远不会再被解除的引用
+在像JAVA这种具有垃圾回收功能的语言中也不是程序员完全不用考虑垃圾回收的问题
+public class Stack {  
+    private Object[] elements;  
+    private int size = 0;  
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;  
+  
+    public Stack() {  
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];  
+    }  
+  
+    public void push(Object e) {  
+        ensureCapacity();  
+        elements[size++] = e;  
+    }  
+  
+    public Object pop() {  
+        if (size == 0)  
+            throw new EmptyStackException();  
+        return elements[--size];  
+    }  
+  
+    /** 
+     * Ensure space for at least one more element, roughly 
+     * doubling the capacity each time the array needs to grow. 
+     */  
+    private void ensureCapacity() {  
+        if (elements.length == size)  
+            elements = Arrays.copyOf(elements, 2 * size + 1);  
+    }  
+}  
+这段程序中的错误很隐秘，无论怎么测试它都会成功。但是它的确存在着"内存泄露"的隐患，随着垃圾回收器活动的增加，这种内存泄露
+会导致磁盘交换，甚至导致程序失败(OutOfMemoryError错误)，但是比较少见。问题在哪？如果一个stack先增后减，那么会弹出的对象
+并不会被当成垃圾回收，原因在于stack内部维持着对这些对象的过期引用（在这里是数组的原因），在上例中，凡是在elements数组的
+“活动部分”之外的任何引用都是过期的，所谓活动部分是指elements中下标小于size的那些元素。
+在支持垃圾回收的语言里，内存泄漏是很隐蔽的，如果一个对象引用被无意识的保留了起来，那么，垃圾回收机制不仅不会处理这个对象，
+而且也不会处理被这个对象所引用的所有其他对象，即使只有少量的引用被无意识的保留了下来，也会有许许多多的对象被排除在垃圾回
+收机制之外，从而对性能造成潜在的重大影响。
+这类问题有一个很简单的修复方法，就是一旦对象引用过期，就将其清空。如下：
+public Object pop() {  
+    if (size == 0)  
+        throw new EmptyStackException();  
+    Object result = elements[--size];  
+    elements[size] = null // Eliminate obsolete reference  
+    return result;  
+}  
+消除过期引用的最好方法是让包含该引用的变量结束其生命周期。那么，应该在何时清空引用呢？在如上的例子中，由于stack自己维持着
+存储池（数组），所以垃圾回收器不会将过期的引用当做垃圾，因为它认为数组中的所有对象引用都同等有效，那么在这种情况下，只有程
+序员知道哪些是有效的，哪些是过期的，就需要手工清空这些数组元素。一般来言，只要类是自己管理内存的，程序员就需要警惕内存泄漏
+的问题。一旦元素被释放掉，则该元素中包含的任何对象引用都应该被清空。
+
+内存泄漏的另一个常见的来源是缓存，一旦把对象引用放入缓存中，它就很容易被遗忘。对于这种情况有几种可能的解决方案，如果你正好
+要实现一个只要在缓存之外存在对某个项的键的引用，该项就有意义这样的缓存的话，就可以使用WeakHashMap代表缓存，因为当缓存中的
+项过期的时候，它们就会自动被删除掉。但是只有当所要的缓存项的生命周期是由key的外部引用而不是由value决定时WeakHashMap才有用处。
+
+更常见的情况是“缓存项的生命周期是否有意义”，并不是很容易确定，随着时间的推移，其中的项会变得越来越没有价值，在这种情况下，
+缓存应该时不时地清除掉没用的项，这种工作可以交给一个后台线程(可能是Timer或者ScheduledThreadPoolExecutor)来完成，或者也可以
+在给缓存添加新条目的时候顺便进行。LinkedHashMap类利用它的removeEldestEntry方法可以很容易的实现后一种方案，对于更加复杂的缓
+存，就只能直接使用java.lang.ref了。
+
+内存泄漏的第三种常见来源是监听器和其他的回调函数。如果客户在你实现的API中注册回调，但是却没有显示取消注册。那么除非你采取
+些手段，否则它们就会积聚。确保回调立即被当作垃圾的最佳方法是只保存它们的弱引用，例如，只将他们保存为WeakHashMap中的键。

@@ -1,0 +1,107 @@
+Clone接口的作用是为了表明类的对象允许克隆，但是Object中的clone方法是受保护的，而没有提供一个公共可访问的clone方法。
+际上，clone方法就是另一个构造器，必须确保它不会伤害到原始对象，并确保正确的创建被克隆对象中的约束条件。于是我们可能会使用
+数组的clone方法，例如对第6条中的Stack类，我们也许会写出如下的clone方法：
+@Override  
+public Stack clone() {  
+    try {  
+        Stack result = (Stack) super.clone();  
+        result.elements = elements.clone();  
+        return rsult;  
+    } catch(CloneNotSupportedException e) {  
+        throw new AssertionError();  
+    }  
+}  
+注意，这里在处理数组的问题上我们并没有调用强制类型转换，自java 1.5以后，在数组上调用clone返回的数组，其编译时类型与被克隆数
+组的类型相同。还有一个问题就是如果elements是final的，则上面的方法就不能正常工作，因为作为一个普通的公有方法，是不允许给final
+域赋新值的，这是个根本的问题：clone架构与引用可变对象的final域的正常用法是不相兼容的。除非在原始对象和克隆对象之间可以安全地
+共享此可变对象，为了使类成为可克隆的，可能有必要从某些域中去年final修饰符。但是上面的这种做法仍然不能完全保证正确的clone方法，
+考虑下面的代码：
+public class HashTable implements Cloneable {  
+        // Entry中存的是链表的头结点  
+        private Entry[] buckets = ...;  
+    private static class Entry {  
+        final Object key;  
+        Object value;  
+        Entry next;  
+  
+        Entry(Object key, Object value, Entry next) {  
+            this.key = key;  
+            this.value = value;  
+            this.next = next;  
+        }  
+    }  
+  
+    @Override  
+    public HashTable clone() {  
+        try {  
+            HashTable result = (HashTable) super.clone();  
+            result.buckets = buckets.clone();  
+            return result;  
+        } catch (CloneNotSupportedException e) {  
+            throw new AssertionError();  
+        }  
+    }  
+    ...// Remainder omitted  
+}  
+这段代码的问题在于，Entry引用的链表与原始对象是一样的，这样一来，很容易引起克隆对象和原始对象中的不确定行为。为了修正这个
+问题可以采用下面这种单独拷贝的做法：
+public class HashTable implements Cloneable {  
+    private Entry[] buckets = ...;  
+    private static class Entry {  
+        final Object key;  
+        Object value;  
+        Entry next;  
+  
+        Entry(Object key, Object value, Entry next) {  
+            this.key = key;  
+            this.value = value;  
+            this.next = next;  
+        }  
+  
+        Entry deepCopy() {  
+            return new Entry(key, value,  
+                next == null ? null : next.deepCopy());  
+        }  
+    }  
+  
+    @Override  
+    public HashTable clone() {  
+        try {  
+            HashTable result = (HashTable) super.clone();  
+            result.buckets = new Entry[buckets.length];  
+            for (int i=0; i < buckets.length; i++)  
+                if (buckets[i] != null)  
+                    result.buckets[i] = buckets[i].deepCopy();  
+        } catch (CloneNotSupportedException e) {  
+            throw new AssertionError();  
+        }  
+    }  
+    ...// Remainder omitted  
+}  
+但是这样的克隆还是存在问题，因为针对列表中的每个元素，它都要消耗一段栈空间，如果链表比较长的话，就可能会导致栈溢出，
+为了避免这种情况，可以使用迭代来替换deepCopy中的递归。
+Entry deepCopy() {  
+    Entry result = new Entry(key, value, next);  
+    for (Entry p = result; p.next != null; p = p.next)  
+        p.next = new Entry(p.next.key, p.next.value, p.next.next);  
+}  
+如果对象很复杂，可能需要递归的调用深度复制。
+克隆复杂对象的最后一种方法是先调用super.clone然后把结果对象中的所有域设置成它们的空白状态，然后调用高层的方法来重新产生对象
+的状态。也就是手动的重新赋值，这种做法往往会产生一个简单、合理且相当优美的clone方法，但是它运行起来通常没有直接操作对象及其
+克隆对象内部状态的clone方法快。如同构造器一样，clone方法不应该在构造的过程中调用 新对象的任何非final方法，因为如果clone调用
+一个可能被覆盖的方法那么在该方法所在的子类有机会修正它在克隆对象中的状态之前，它就会先被执行。这样很有可能被导致克隆出来的
+对象和原始对象之间的不一致。
+
+如果专门为了继承而去设计一个clone方法，那就应该模拟Object.clone的行为：它应该被声名为protected，抛出CloneNotSupportedException，
+并且该类不应该实现Cloneable接口。这样可以使子类具有实现或者不实现Cloneable接口的自由。还有，如果决定用线程安全的类实现
+Clonebale接口，那么要记得它的clone方法必须实现很好的同步。
+
+由于覆盖clone方法很复杂，最好提供某些其他的途径来代替对象拷贝，或者干脆不提供这样的功能。另一个实现对象拷贝的好办法是提供一
+个拷贝构造器或拷贝工厂，这两种方法都要比Cloneable/clone方法具有更多的优势，它们不依赖于某一种很有风险的，语言之外的对象创
+建机制，它们不要求遵守尚未制定好文档的规范，它们不会与final域的正常使用发生冲突，它们不会抛出不必要的受检异常，它们不需要
+进行类型转换。除此之外，拷贝构造器或者拷贝工厂可以带一个参数，参数类型是通过该类实现的接口，这允许客户选择拷贝的实现类型，
+而不是强迫客户接受原始的实现类型，比如假设有一个HashSet，并且希望把它拷贝成一个TreeSet，clone方法无法提供这样的功能但是上
+面的方法很容易做到：new TreeSet(s)。
+
+Cloneable具有上述这么多的问题，那么可以肯定的说，其他的接口都不应该扩展这个接口，为了继承而设计的类也不应该实现这个接口，
+对于一个专门为了继承而设计 的类，如果你未能提供行为良好的受保护的clone方法，它的子类就不可能实现Cloneable接口。

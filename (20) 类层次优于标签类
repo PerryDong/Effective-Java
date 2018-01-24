@@ -1,0 +1,76 @@
+标签类(tagged class)：带有两种甚至更多风格的实例的类，并包含表示实例风格的标签域。例如：
+class Figure {  
+    enum Shape { RECTANGLE, CIRCLE };  
+      
+    // Tag field - the shape of this figure  
+    final Shape shape;  
+      
+    // These fields are used only if shape is RECTANGLE  
+    double length;  
+    double width;  
+      
+    // This field is used only is shape is CIRCLE  
+    double radius;  
+      
+    // Constructor for circle  
+    public Figure(double radius) {  
+        shape = Shape.CIRCLE;  
+        this.radius = radius;  
+    }  
+      
+    // COnstructor for rectangle  
+    public Figure(double length, double width) {  
+        shape = Shape.RECTANGLE;  
+        this.length = length;  
+        this.width = width;  
+    }  
+      
+    double area() {  
+        switch (shape) {  
+        case RECTANGLE:  
+            return length * width;  
+        case CIRCLE:  
+            return Math.PI * (radius * radius);  
+        default:  
+            throw new AssertionError();  
+        }  
+    }  
+}  
+标签类存在着许多缺点。标签类是对类层次的一种简单的仿效。既然如此，那么为了表示之种风格对象的单个数据类型，用子类化更为合适。
+为了将标签转变为类层次，首先要为标签中的每个方法都定义一个包含抽象方法的抽象类，每个方法的行为都信赖于标签值。在Figure中，
+area就是这样的方法。这个抽象类是类层次的根。同样的，如果所有的方法都用到了某些数据域，就应该把它们放到这个类中。接下来，
+为每种原始标签类都定义根类的具体子类，在前面的例子了，应该定义Circle和Rectangle两个子类，每个子类都包含特定于该类型的数据。
+同时每个子类中还包括针对根类每个抽象方法的相应实现。根据以下的修改原则，Figure的类层次表示如下：
+abstract class Figure {  
+    abstract double area();  
+}  
+  
+class Circle extends Figure {  
+    final double radius;  
+      
+    public Circle(double radius) {  
+        this.radius = radius;  
+    }  
+      
+    double area() {  
+        return Math.PI * (radius * radius);  
+    }  
+}  
+  
+class Rectangle extends Figure {  
+    final double length;  
+    final double width;  
+      
+    public Rectangle(double length, double width) {  
+        this.length = length;  
+        this.width = width;  
+    }  
+      
+    double area() {  
+        return length * width;  
+    }  
+}  
+
+规则：
+标签类很少有适用的时候。当想要编写民一个包含显示标签域的类时，应该考虑一下，这个标签是否可以被取消，是否可以用类层次来代替。
+当遇到一个包含标签域的现有类时，就要考虑一下将它重构到一外类层次结构中去。
